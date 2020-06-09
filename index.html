@@ -20,10 +20,16 @@
         <h3>Grid line removal <button id="show-degrid-toggle" onclick="onToggleShowDegrid();">Show</button></h3>
     </p>
     <div id="degrid" style="display:none"></div>
+    <hr/>
+    <p>
+        <h3>Clean</h3>
+        <canvas id="clean-ui-canvas"></canvas>
+    </p>
 </body>
 
 <script src="rotation.js"></script>
 <script src="degrid.js"></script>
+<script src="clean.js"></script>
 <script>
 
     const sourceSelector = document.getElementById("source-selector");
@@ -32,6 +38,8 @@
     const rotationIterationsDiv = document.getElementById("rotation-iterations");
     const showDegridToggle = document.getElementById("show-degrid-toggle");
     const degridDiv = document.getElementById("degrid");
+    const cleanUICanvas = document.getElementById("clean-ui-canvas");
+    const cleanUIContext = cleanUICanvas.getContext("2d");
 
     // Working variables below are declared in order of computation
 
@@ -39,9 +47,11 @@
         ORIGINAL: 0,
         ROTATED: 1,
         BW: 2,
-        DEGRIDDED: 3
+        DEGRIDDED: 3,
+        POSTCROP: 4,
+        POSTCLEAN: 5,
+        FINAL: 6
     }
-    const nCanvases = 4;
     let canvases;
     let contexts;
     let w; let h; // width and height of image
@@ -61,14 +71,6 @@
     }
 
     function onSourceChanged() {
-
-        while (rotationIterationsDiv.lastElementChild)
-            rotationIterationsDiv.removeChild(rotationIterationsDiv.lastElementChild);
-        rotationIterationsDiv.innerText = "";
-
-        while (degridDiv.lastElementChild)
-            degridDiv.removeChild(degridDiv.lastElementChild);
-        degridDiv.innerText = "";
 
         if (sourceSelector.files.length == 0)
             return;
@@ -105,7 +107,7 @@
 
         canvases = [];
         contexts = [];
-        for (let i = 0; i < nCanvases; i++) {
+        for (let i = 0; i < CANVAS.POSTCROP; i++) {
             canvases.push(document.createElement("canvas"));
             canvases[i].width = w; canvases[i].height = h;
             contexts.push(canvases[i].getContext("2d"));

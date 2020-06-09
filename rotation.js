@@ -42,25 +42,27 @@ function renderWithFrequencing(text) {
 
     // Build HTML layout
 
-    const imageCanvas = document.createElement("canvas"); imageCanvas.width = w; imageCanvas.height = h;
+    const displayCanvas = document.createElement("canvas"); displayCanvas.width = w + 150; displayCanvas.height = h + 150;
     const xFreqCanvas = document.createElement("canvas"); xFreqCanvas.width = w; xFreqCanvas.height = freqDispSize;
     const yFreqCanvas = document.createElement("canvas"); yFreqCanvas.width = freqDispSize; yFreqCanvas.height = h;
 
-    const imageContext = imageCanvas.getContext("2d");
+    const displayContext = displayCanvas.getContext("2d");
     const xFreqContext = xFreqCanvas.getContext("2d");
     const yFreqContext = yFreqCanvas.getContext("2d");
 
-    rotationIterationsDiv.appendChild(imageCanvas);
-    rotationIterationsDiv.appendChild(yFreqCanvas);
-    rotationIterationsDiv.appendChild(document.createElement("br"));
-    rotationIterationsDiv.appendChild(xFreqCanvas);
+
+    while (rotationIterationsDiv.lastElementChild)
+        rotationIterationsDiv.removeChild(rotationIterationsDiv.lastElementChild);
+    rotationIterationsDiv.innerText = "";
+
+    rotationIterationsDiv.appendChild(displayCanvas);
     rotationIterationsDiv.appendChild(document.createTextNode("  " + text + ", " + freqResults.xMax));
     rotationIterationsDiv.appendChild(document.createElement("br"));
     rotationIterationsDiv.appendChild(document.createElement("br"));
 
     // Draw to image canvas, reading from the rotated canvas
 
-    imageContext.drawImage(canvases[CANVAS.ROTATED], 0, 0);
+    displayContext.drawImage(canvases[CANVAS.ROTATED], 0, 0);
 
     // Render global freqResults with global canvases[CANVAS.ROTATED]
 
@@ -76,6 +78,8 @@ function renderWithFrequencing(text) {
 
     xFreqContext.putImageData(new ImageData(xFreqRenderData, w, freqDispSize), 0, 0);
     yFreqContext.putImageData(new ImageData(yFreqRenderData, freqDispSize, h), 0, 0);
+    displayContext.drawImage(xFreqCanvas, 0, h);
+    displayContext.drawImage(yFreqCanvas, w, 0);
 
 }
 
