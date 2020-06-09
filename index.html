@@ -1,0 +1,199 @@
+<html lang="en-GB">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Abstractus</title>
+</head>
+
+<body>
+    <p>
+        <input type="file" id="source-selector" accept=".png" onchange="onSourceChanged();">
+        <button onclick="onSourceChanged();">Resubmit</button>
+    </p>
+    <div id="rotation-iterations"></div>
+</body>
+
+<script>
+
+    const sourceSelector = document.getElementById("source-selector");
+    const rotationIterations = document.getElementById("rotation-iterations");
+
+    const originalCanvas = document.createElement("canvas");
+    const workingCanvas = document.createElement("canvas");
+    const originalContext = originalCanvas.getContext("2d");
+    const workingContext = workingCanvas.getContext("2d");
+
+    function onSourceChanged() {
+
+        while (rotationIterations.lastElementChild)
+            rotationIterations.removeChild(rotationIterations.lastElementChild);
+        rotationIterations.innerText = "";
+
+        if (sourceSelector.files.length == 0)
+            return;
+
+        const promise = createImageBitmap(sourceSelector.files[0]);
+        promise.then(processBitmap, (reason) => alert("Image could not be loaded:" + reason));
+
+    }
+
+    function processBitmap(bitmap) {
+
+        const w = bitmap.width;
+        const h = bitmap.height;
+
+        originalCanvas.width = w; originalCanvas.height = h;
+        workingCanvas.width = w; workingCanvas.height = h;
+
+        originalContext.drawImage(bitmap, 0, 0);
+        bitmap.close();
+
+        angle = 0.0;
+        delta = 4.0;
+        let currentFreqs = frequenceAtWorkingRotation(angle);
+        renderWithFrequencing(currentFreqs, "0");
+        while (delta > 0.1) { // i.e. 0.125 or larger
+            let pFreqs = frequenceAtWorkingRotation(angle + delta);
+            let mFreqs = frequenceAtWorkingRotation(angle - delta);
+            console.log(mFreqs.xMax + "," + currentFreqs + "," + pFreqs.xMax);
+            // the higher xMax, the higher quality, since at perfect alignment a whole grid line collapses to one pixel
+            // xMax is used instead of yMax since the x-axis label creates a spike in the yFreq spectrum.
+
+            //          P
+            //      <   =   >
+            //   <  R   R   +            R: refine delta
+            // M =  R   R   +          -/+: increment or decrement angle
+            //   <  -   -   ?            ?: in an *ideal* world this would never happen
+            //
+            if (pFreqs.xMax <= currentFreqs.xMax && mFreqs.xMax <= currentFreqs.xMax) { // i.e. ±delta both worsen
+                delta /= 2;
+            } else if (pFreqs.xMax > currentFreqs.xMax && mFreqs.xMax > currentFreqs.xMax) { // i.e. ±delta both better
+                alert("Warning: illegible results when trying to correct rotation.\nAssuming current rotation is correct.");
+                break;
+            } else {
+                angle += (pFreqs.xMax > currentFreqs.xMax) ? delta : -delta;
+                currentFreqs = frequenceAtWorkingRotation(angle);
+                renderWithFrequencing(currentFreqs, angle);
+            }
+        }
+    }
+
+    function renderWithFrequencing(freqResult, text) {
+
+        const w = workingCanvas.width;
+        const h = workingCanvas.height;
+        const freqDispSize = 100; // the height of the xFreq display and the width of the yFreq one
+
+        // Build HTML layout
+
+        const imageCanvas = document.createElement("canvas"); imageCanvas.width = w; imageCanvas.height = h;
+        const xFreqCanvas = document.createElement("canvas"); xFreqCanvas.width = w; xFreqCanvas.height = freqDispSize;
+        const yFreqCanvas = document.createElement("canvas"); yFreqCanvas.width = freqDispSize; yFreqCanvas.height = h;
+
+        const imageContext = imageCanvas.getContext("2d");
+        const xFreqContext = xFreqCanvas.getContext("2d");
+        const yFreqContext = yFreqCanvas.getContext("2d");
+
+        rotationIterations.appendChild(imageCanvas);
+        rotationIterations.appendChild(yFreqCanvas);
+        rotationIterations.appendChild(document.createElement("br"));
+        rotationIterations.appendChild(xFreqCanvas);
+        rotationIterations.appendChild(document.createTextNode("  " + text + ", " + freqResult.xMax));
+        rotationIterations.appendChild(document.createElement("br"));
+        rotationIterations.appendChild(document.createElement("br"));
+
+        // Draw to image canvas, reading from the working canvas
+
+        imageContext.drawImage(workingCanvas, 0, 0);
+
+        // Render frequencing results. It is assumed that the freqResult provided maps to the working canvas, which
+        // should be the case if this is called after frequenceAtWorkingRotation().
+
+        let xFreqRenderData = new Uint8ClampedArray(freqDispSize * w * 4);
+        for (let x = 0; x < w; x++)
+            for (let y = 1; y <= freqResult.xData[x] * freqDispSize / freqResult.xMax; y++)
+                xFreqRenderData[(x + y * w) * 4 + 3] = 255;
+
+        let yFreqRenderData = new Uint8ClampedArray(freqDispSize * h * 4);
+        for (let y = 0; y < h; y++)
+            for (let x = 1; x <= freqResult.yData[y] * freqDispSize / freqResult.yMax; x++)
+                yFreqRenderData[(x + y * freqDispSize) * 4 + 3] = 255;
+
+        xFreqContext.putImageData(new ImageData(xFreqRenderData, w, freqDispSize), 0, 0);
+        yFreqContext.putImageData(new ImageData(yFreqRenderData, freqDispSize, h), 0, 0);
+
+    }
+
+    function frequenceAtWorkingRotation(angle) {
+
+        const w = workingCanvas.width;
+        const h = workingCanvas.height;
+
+        workingContext.clearRect(0,0,w,h);
+        workingContext.resetTransform();
+        workingContext.translate(w / 2, h / 2);
+        workingContext.rotate(angle * Math.PI / 180);
+        workingContext.translate(-w / 2, -h / 2);
+        workingContext.drawImage(originalCanvas, 0, 0);
+        workingContext.resetTransform();
+
+        const sourceData = workingContext.getImageData(0, 0, w, h).data;
+        const bwData = bwify(sourceData, w, h);
+        const freqResult = frequence(bwData, w, h);
+
+        return freqResult;
+
+    }
+
+    function bwify(sourceData, w, h) {
+
+        // Thresholds to be considered black
+        const alphaThreshold = 200;     // alpha > 200
+        const intensityThreshold = 600; // r+g+b < 500
+
+        let bwData = new Uint8Array(sourceData.length / 4);
+        for (let x = 0; x < w; x++) {
+            for (let y = 0; y < h; y++) {
+                coord = (x + y * w);
+                bwData[coord] = (sourceData[coord * 4 + 3] > 200) && ((sourceData[coord * 4] + sourceData[coord * 4 + 1] + sourceData[coord * 4 + 2]) < 500)
+            }
+        }
+
+        return bwData;
+
+    }
+
+    class FrequencingResult {
+        constructor(xData, yData, xMax, yMax) {
+            this.xData = xData;
+            this.yData = yData;
+            this.xMax = xMax;
+            this.yMax = yMax;
+        }
+    }
+
+    function frequence(bwData, w, h) {
+
+        let xData = new Uint16Array(w);
+        let yData = new Uint16Array(h);
+
+        for (let x = 0; x < w; x++) {
+            for (let y = 0; y < h; y++) {
+                coord = (x + y * w);
+                xData[x] += bwData[coord];
+                yData[y] += bwData[coord];
+            }
+        }
+
+        let xMax = xData.reduce((prev, curr) => Math.max(prev, curr));
+        let yMax = yData.reduce((prev, curr) => Math.max(prev, curr));
+
+        return new FrequencingResult(xData, yData, xMax, yMax);
+
+    }
+
+
+
+</script>
+
+</html>
