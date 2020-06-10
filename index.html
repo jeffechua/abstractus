@@ -12,36 +12,81 @@
     </p>
     <hr />
     <p>
-        <h3>Rotation correction <button id="show-rotation-toggle" onclick="onToggleShowRotation();">Show</button></h3>
+        <h3>Rotation correction <button id="rotation-toggle" onclick="toggleSection(SECTION.ROTATION);">Show</button>
+        </h3>
     </p>
-    <div id="rotation-iterations" style="display:none"></div>
+    <div id="rotation-div" style="display:none"></div>
     <hr />
     <p>
-        <h3>Grid line removal <button id="show-degrid-toggle" onclick="onToggleShowDegrid();">Show</button></h3>
+        <h3>Bwify <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button>
+        <table><tr>
+            <td>Cutoff:</td>
+            <td><input type="number" min="0.0" max="1.0" step="0.02" id="bwify-thresh-number" style="width:50px" onchange="bwifyNumberChanged();"></td>
+            <td><input type="range" min="0.0" max="1.0" step="0.02" class="slider" id="bwify-thresh-slider" onchange="bwifySliderChanged()"></td>
+            <td><button id="bwifyReset" onclick="bwifyNumber.value=bwifyParams.defaultIntensityThreshold; bwifyNumberChanged()">Reset</button></td>
+        </tr></table></h3>
     </p>
-    <div id="degrid" style="display:none"></div>
-    <hr/>
+    <div id="bwify-div" style="display:none">
+        <canvas id="bwify-canvas"></canvas>
+    </div>
+    <hr />
     <p>
-        <h3>Clean</h3>
-        <canvas id="clean-ui-canvas"></canvas>
+        <h3>Degridding <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button></h3>
+    </p>
+    <div id="degrid-div" style="display:none"></div>
+    <hr />
+    <p>
+        <h3>Clean <button id="clean-toggle" onclick="toggleSection(SECTION.CLEAN);">Show</button></h3>
+        <div id="clean-div" style="display:block"></div>
     </p>
 </body>
 
 <script src="rotation.js"></script>
+<script src="bwify.js"></script>
 <script src="degrid.js"></script>
 <script src="clean.js"></script>
 <script>
 
     const sourceSelector = document.getElementById("source-selector");
 
-    const showRotationToggle = document.getElementById("show-rotation-toggle");
-    const rotationIterationsDiv = document.getElementById("rotation-iterations");
-    const showDegridToggle = document.getElementById("show-degrid-toggle");
-    const degridDiv = document.getElementById("degrid");
-    const cleanUICanvas = document.getElementById("clean-ui-canvas");
-    const cleanUIContext = cleanUICanvas.getContext("2d");
+    // UI stuff
 
-    // Working variables below are declared in order of computation
+    const SECTION = {
+        ROTATION: 0,
+        BWIFY: 1,
+        DEGRID: 2,
+        CLEAN: 3
+    }
+    const sectionNames = [
+        "rotation",
+        "bwify",
+        "degrid",
+        "clean"
+    ]
+    const sectionToggles = [];
+    const sectionDivs = [];
+    for (let i = 0; i < sectionNames.length; i++) {
+        sectionToggles.push(document.getElementById(sectionNames[i] + "-toggle"));
+        sectionDivs.push(document.getElementById(sectionNames[i] + "-div"));
+    }
+
+    function toggleSection(i) {
+        if (sectionToggles[i].innerText == "Show") {
+            sectionDivs[i].style.display = "block";
+            sectionToggles[i].innerText = "Hide";
+        } else {
+            sectionDivs[i].style.display = "none";
+            sectionToggles[i].innerText = "Show";
+        }
+    }
+
+    function clearSection(i) {
+        while (sectionDivs[i].lastElementChild)
+            sectionDivs[i].removeChild(sectionDivs[i].lastElementChild);
+        sectionDivs[i].innerText = "";
+    }
+
+    // Processing stuff
 
     const CANVAS = {
         ORIGINAL: 0,
@@ -52,23 +97,17 @@
         POSTCLEAN: 5,
         FINAL: 6
     }
-    let canvases;
+    let canvases; // array over CANVAS.
     let contexts;
+
     let w; let h; // width and height of image
-    let l = 0; let r = 0; let t = 0; let b = 0; // bounds of *chart area*
     let w2; let wh; // width and height of chart area
+    let l = 0; let r = 0; let t = 0; let b = 0; // bounds of *chart area*
 
-    // Note: bwBitmap is sporadically updated through the process, at different times from the canvasses
-    // a uint8array is easier to read from, but a canvas is more efficient to write en masse to. e.g.
-    // when stripping grid lines we read from bwBitmap but strip from the BW canvas.
-    let bwBitmap;
+    let rotatedBitmap; // bitmap data of canvases[CANVAS.ROTATED]
+    let bwBitmap;      // bitmap data of canvases[CANVAS.BW]
 
-    let freqResults = {
-        xData: null,
-        yData: null,
-        xMax: 0,
-        yMax: 0
-    }
+    let progress = -1;
 
     function onSourceChanged() {
 
@@ -78,26 +117,6 @@
         const promise = createImageBitmap(sourceSelector.files[0]);
         promise.then(processBitmap, (reason) => alert("Image could not be loaded:" + reason));
 
-    }
-
-    function onToggleShowRotation() {
-        if (showRotationToggle.innerText == "Show") {
-            rotationIterationsDiv.style.display = "block";
-            showRotationToggle.innerText = "Hide";
-        } else {
-            rotationIterationsDiv.style.display = "none";
-            showRotationToggle.innerText = "Show";
-        }
-    }
-
-    function onToggleShowDegrid() {
-        if (showDegridToggle.innerText == "Show") {
-            degridDiv.style.display = "block";
-            showDegridToggle.innerText = "Hide";
-        } else {
-            degridDiv.style.display = "none";
-            showDegridToggle.innerText = "Show";
-        }
     }
 
     function processBitmap(bitmap) {
@@ -112,12 +131,6 @@
             canvases[i].width = w; canvases[i].height = h;
             contexts.push(canvases[i].getContext("2d"));
         }
-
-        bwBitmap = new Uint8ClampedArray(w * h * 4);
-        freqResults.xData = new Uint16Array(w);
-        freqResults.yData = new Uint16Array(h);
-        freqResults.x = 0;
-        freqResults.y = 0;
 
         contexts[CANVAS.ORIGINAL].drawImage(bitmap, 0, 0);
         bitmap.close();

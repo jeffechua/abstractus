@@ -1,9 +1,33 @@
+// TODO: OPTIMIZE RECOMPUTEROTATION; WE NEED TO REUSE OLD FREQUENCINGS INSTEAD OF RECALCULATING REDUNDANTLY
+
+let freqs = {
+    xData: null,
+    yData: null,
+    xMax: 0,
+    yMax: 0
+}
+
+let angle;
 
 function recomputeRotation() {
-    angle = 0.0;
-    delta = 4.0;
+
+    progress = SECTION.ROTATION;
+    
+    angle = 0;
+    let delta = 4.0;
+
+    freqs.xData = new Uint16Array(w);
+    freqs.yData = new Uint16Array(h);
+    freqs.x = 0;
+    freqs.y = 0;
+
+    clearSection(SECTION.ROTATION);
+
+    // Initial frequence
     let currentFreqs = frequenceAtRotation(angle);
     renderWithFrequencing("0");
+
+    // Solve for highest xMax
     while (delta > 0.05) { // i.e. 0.0625 or larger
         let pFreqs = frequenceAtRotation(angle + delta);
         let mFreqs = frequenceAtRotation(angle - delta);
@@ -23,63 +47,50 @@ function recomputeRotation() {
             renderWithFrequencing(angle);
         }
     }
+
     frequenceAtRotation(angle); // in case we broke right after an mFreqs evaluation.
-    // This ensures global bwBitmap and freqResults match the most recent render
+    // This ensures global bwBitmap and freqs match the most recent render
 
-    // Write black and white image
-    contexts[CANVAS.BW].putImageData(new ImageData(bwBitmap, w, h), 0, 0);
-
-    recomputeDegrid();
+    recomputeBwify();
 
 }
 
+function renderWithFrequencing() {
 
-function renderWithFrequencing(text) {
-
-    const w = canvases[CANVAS.ROTATED].width;
-    const h = canvases[CANVAS.ROTATED].height;
     const freqDispSize = 100; // the height of the xFreq display and the width of the yFreq one
 
     // Build HTML layout
 
-    const displayCanvas = document.createElement("canvas"); displayCanvas.width = w + 150; displayCanvas.height = h + 150;
-    const xFreqCanvas = document.createElement("canvas"); xFreqCanvas.width = w; xFreqCanvas.height = freqDispSize;
-    const yFreqCanvas = document.createElement("canvas"); yFreqCanvas.width = freqDispSize; yFreqCanvas.height = h;
-
+    const displayCanvas = document.createElement("canvas");
+    displayCanvas.width = w + freqDispSize; displayCanvas.height = h + freqDispSize;
     const displayContext = displayCanvas.getContext("2d");
-    const xFreqContext = xFreqCanvas.getContext("2d");
-    const yFreqContext = yFreqCanvas.getContext("2d");
 
-
-    while (rotationIterationsDiv.lastElementChild)
-        rotationIterationsDiv.removeChild(rotationIterationsDiv.lastElementChild);
-    rotationIterationsDiv.innerText = "";
-
-    rotationIterationsDiv.appendChild(displayCanvas);
-    rotationIterationsDiv.appendChild(document.createTextNode("  " + text + ", " + freqResults.xMax));
-    rotationIterationsDiv.appendChild(document.createElement("br"));
-    rotationIterationsDiv.appendChild(document.createElement("br"));
+    sectionDivs[SECTION.ROTATION].appendChild(displayCanvas);
+    sectionDivs[SECTION.ROTATION].appendChild(document.createElement("br"));
+    sectionDivs[SECTION.ROTATION].appendChild(document.createElement("br"));
 
     // Draw to image canvas, reading from the rotated canvas
 
     displayContext.drawImage(canvases[CANVAS.ROTATED], 0, 0);
 
-    // Render global freqResults with global canvases[CANVAS.ROTATED]
+    // Render global freqs with global canvases[CANVAS.ROTATED]
 
-    let xFreqRenderData = new Uint8ClampedArray(freqDispSize * w * 4);
+    let xFreqDisplayBitmap = new Uint8ClampedArray(freqDispSize * w * 4);
     for (let x = 0; x < w; x++)
-        for (let y = 1; y <= freqResults.xData[x] * freqDispSize / freqResults.xMax; y++)
-            xFreqRenderData[(x + y * w) * 4 + 3] = 255;
+        for (let y = 1; y <= freqs.xData[x] * freqDispSize / freqs.xMax; y++)
+            xFreqDisplayBitmap[(x + y * w) * 4 + 3] = 255;
 
-    let yFreqRenderData = new Uint8ClampedArray(freqDispSize * h * 4);
+    let yFreqDisplayBitmap = new Uint8ClampedArray(freqDispSize * h * 4);
     for (let y = 0; y < h; y++)
-        for (let x = 1; x <= freqResults.yData[y] * freqDispSize / freqResults.yMax; x++)
-            yFreqRenderData[(x + y * freqDispSize) * 4 + 3] = 255;
+        for (let x = 1; x <= freqs.yData[y] * freqDispSize / freqs.yMax; x++)
+            yFreqDisplayBitmap[(x + y * freqDispSize) * 4 + 3] = 255;
 
-    xFreqContext.putImageData(new ImageData(xFreqRenderData, w, freqDispSize), 0, 0);
-    yFreqContext.putImageData(new ImageData(yFreqRenderData, freqDispSize, h), 0, 0);
-    displayContext.drawImage(xFreqCanvas, 0, h);
-    displayContext.drawImage(yFreqCanvas, w, 0);
+    textSize = displayContext.font.split(" ")[0];
+    textSize = parseInt(textSize.substr(0, textSize.length - 2));
+    displayContext.putImageData(new ImageData(xFreqDisplayBitmap, w, freqDispSize), 0, h);
+    displayContext.putImageData(new ImageData(yFreqDisplayBitmap, freqDispSize, h), w, 0);
+    displayContext.fillText("Angle: " + ((angle > 0) ? "+" : "") + angle, w, h+textSize);
+    displayContext.fillText("Quality: " + freqs.xMax, w, h+2*textSize);
 
 }
 
@@ -90,7 +101,6 @@ function frequenceAtRotation(angle) {
 
     // Generate the rotated image
     contexts[CANVAS.ROTATED].clearRect(0, 0, w, h);
-    contexts[CANVAS.ROTATED].resetTransform();
     contexts[CANVAS.ROTATED].translate(w / 2, h / 2);
     contexts[CANVAS.ROTATED].rotate(angle * Math.PI / 180);
     contexts[CANVAS.ROTATED].translate(-w / 2, -h / 2);
@@ -98,36 +108,26 @@ function frequenceAtRotation(angle) {
     contexts[CANVAS.ROTATED].resetTransform();
 
     // Extract the rotated image data
-    const sourceData = contexts[CANVAS.ROTATED].getImageData(0, 0, w, h).data;
+    rotatedBitmap = contexts[CANVAS.ROTATED].getImageData(0, 0, w, h).data;
 
-    // Compute bwBitmap (black and white bitmap) from rotated image data, and frequence
-    freqResults.xData.fill(0);
-    freqResults.yData.fill(0);
-    const alphaThreshold = 200;     // alpha > 200
-    const intensityThreshold = 500; // r+g+b < 500; these are the thresholds to consider a pixel black
+    // Frequence
+    freqs.xData.fill(0);
+    freqs.yData.fill(0);
     for (let x = 0; x < w; x++) {
         for (let y = 0; y < h; y++) {
-            coord = (x + y * w);
-            if ((sourceData[coord * 4 + 3] > alphaThreshold) && ((sourceData[coord * 4] + sourceData[coord * 4 + 1] + sourceData[coord * 4 + 2]) < intensityThreshold)) {
-                bwBitmap[coord * 4] = 0;
-                bwBitmap[coord * 4 + 1] = 0;
-                bwBitmap[coord * 4 + 2] = 0;
-                bwBitmap[coord * 4 + 3] = 255;
-                freqResults.xData[x] += 1;
-                freqResults.yData[y] += 1;
-            } else {
-                bwBitmap[coord * 4] = 255;
-                bwBitmap[coord * 4 + 1] = 255;
-                bwBitmap[coord * 4 + 2] = 255;
-                bwBitmap[coord * 4 + 3] = 255;
+            let coord = (x + y * w);
+            if (rotatedBitmap[coord * 4 + 3] > bwifyParams.alphaThreshold) {
+                let rgb = (1.0 - (rotatedBitmap[coord * 4] + rotatedBitmap[coord * 4 + 1] + rotatedBitmap[coord * 4 + 2]) / 256 / 3) * 5;
+                freqs.xData[x] += rgb;
+                freqs.yData[y] += rgb;
             }
         }
     }
 
     // Compute maxes
-    freqResults.xMax = freqResults.xData.reduce((prev, curr) => Math.max(prev, curr));
-    freqResults.yMax = freqResults.yData.reduce((prev, curr) => Math.max(prev, curr));
+    freqs.xMax = freqs.xData.reduce((prev, curr) => Math.max(prev, curr));
+    freqs.yMax = freqs.yData.reduce((prev, curr) => Math.max(prev, curr));
 
-    return freqResults.xMax;
+    return freqs.xMax;
 
 }
