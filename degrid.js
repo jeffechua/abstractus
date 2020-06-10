@@ -1,8 +1,16 @@
-const degridParams = {
-    deleteThreshold: 0.4,
-    cleanThreshold: 0.1,
+const defaultDegridParams = {
+    detectionThreshold: 0.4,
+    slopeThreshold: 0.1,
     defaultMargin: 1
 }
+
+const degridParams = {
+    detectionThreshold: 0.4,
+    slopeThreshold: 0.1,
+    defaultMargin: 1
+}
+
+const editorSize = 50;
 
 let xGridLines;
 let yGridLines;
@@ -12,10 +20,11 @@ class GridLine {
     constructor(lower, upper, dir, margin = -1) {
         this.lower = lower;
         this.upper = upper;
-        if (dir != "x" && dir != "y")
+        if (dir != "v" && dir != "h")
             alert("Invalid grid line direction, assuming y.");
         this.dir = dir;
-        this._margin = margin; // DO NOT CHANGE THIS DIRECTLY. Always use "margin".
+        this._margin = margin; // This is -1 if using default. get this to check if -1; there should be no case where we want to set this.
+        this.active = true;
         this.erase();
     }
 
@@ -31,7 +40,7 @@ class GridLine {
 
     erase() {
         let span = this.uupper - this.llower + 1; // +1 to be inclusive
-        if (this.dir == 'x')
+        if (this.dir == "v")
             contexts[CANVAS.DEGRIDDED].clearRect(this.llower, 0, span, h);
         else
             contexts[CANVAS.DEGRIDDED].clearRect(0, this.llower, w, span);
@@ -39,7 +48,7 @@ class GridLine {
 
     restore() {
         let span = this.uupper - this.llower + 1; // +1 to be inclusive
-        if (this.dir == 'x')
+        if (this.dir == "v")
             contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], this.llower, 0, span, h, this.llower, 0, span, h);
         else
             contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, this.llower, w, span, 0, this.llower, w, span);
@@ -48,14 +57,14 @@ class GridLine {
     get center() {
         let integral = 0;
         let area = 0;
-        const array = (this.dir == "x") ? freqs.xData : freqs.yData;
+        const array = (this.dir == "v") ? freqs.xData : freqs.yData;
         for (let i = this.lower; i <= this.upper; i++) {
             integral += i * array[i];
             area += array[i];
         }
         return Math.round(integral / area);
     }
-    
+
 }
 
 function recomputeDegrid() {
@@ -72,79 +81,167 @@ function recomputeDegrid() {
 
     // Delete horizontal grid lines
     for (let x = 0; x < freqs.xData.length; x++) {
-        if (!deleting && freqs.xData[x] > degridParams.deleteThreshold * freqs.xMax) { // found new deletion zone
+        if (!deleting && freqs.xData[x] > degridParams.detectionThreshold * freqs.xMax) { // found new deletion zone
             deleting = true; lower = x;
             // Backtrack to find start of deletion zone
-            while (lower > 2 && freqs.xData[lower - 1] - freqs.xData[lower - 2] > degridParams.cleanThreshold * freqs.xMax)
+            while (lower > 2 && freqs.xData[lower - 1] - freqs.xData[lower - 2] > degridParams.slopeThreshold * freqs.xMax)
                 lower--;
-        } else if (deleting && freqs.xData[x] <= degridParams.deleteThreshold * freqs.xMax) { // close deletion zone
+        } else if (deleting && freqs.xData[x] <= degridParams.detectionThreshold * freqs.xMax) { // close deletion zone
             deleting = false; upper = x - 1;
             // Forwardtrack to find end of deletion zone
-            while (upper < w - 3 && freqs.xData[upper + 1] - freqs.xData[upper + 2] > degridParams.cleanThreshold * freqs.xMax)
+            while (upper < w - 3 && freqs.xData[upper + 1] - freqs.xData[upper + 2] > degridParams.slopeThreshold * freqs.xMax)
                 upper++;
-            xGridLines.push(new GridLine(lower, upper, 'x'));
+            xGridLines.push(new GridLine(lower, upper, "v"));
             // Skip x to upper to save time technically the variable "upper" is unnecessary, but this way is more readable
             x = upper;
         }
     }
     if (deleting) { // Clean up loose ends
-        xGridLines.push(new GridLine(lower, w - 1, 'x'));
+        xGridLines.push(new GridLine(lower, w - 1, "v"));
     }
 
     // Delete vertical grid lines
     deleting = false;
     for (let y = 0; y < freqs.yData.length; y++) {
-        if (!deleting && freqs.yData[y] > degridParams.deleteThreshold * freqs.yMax) { // start deleting
+        if (!deleting && freqs.yData[y] > degridParams.detectionThreshold * freqs.yMax) { // start deleting
             deleting = true; lower = y;
             // Find lower bound of deletion zone
-            while (lower > 2 && freqs.yData[lower - 1] - freqs.yData[lower - 2] > degridParams.cleanThreshold * freqs.yMax)
+            while (lower > 2 && freqs.yData[lower - 1] - freqs.yData[lower - 2] > degridParams.slopeThreshold * freqs.yMax)
                 lower--;
-        } else if (deleting && freqs.yData[y] <= degridParams.deleteThreshold * freqs.yMax) { // stop deleting
+        } else if (deleting && freqs.yData[y] <= degridParams.detectionThreshold * freqs.yMax) { // stop deleting
             deleting = false; upper = y - 1;
             // Find upper bound of deletion zone
-            while (upper < w - 3 && freqs.yData[upper + 1] - freqs.yData[upper + 2] > degridParams.cleanThreshold * freqs.yMax)
+            while (upper < w - 3 && freqs.yData[upper + 1] - freqs.yData[upper + 2] > degridParams.slopeThreshold * freqs.yMax)
                 upper++;
-            yGridLines.push(new GridLine(lower, upper, 'y'));
+            yGridLines.push(new GridLine(lower, upper, "h"));
             y = upper;
         }
     }
     if (deleting) // Clean up loose ends
-        yGridLines.push(new GridLine(lower, h - 1, 'y'));
+        yGridLines.push(new GridLine(lower, h - 1, "h"));
 
     if (xGridLines.length <= 0 || yGridLines.length <= 1) {
         alert("Insufficient grid lines found to establish chart area bounds.");
         return;
     }
-
-    // Find chart area bounds
-    l = xGridLines[0].center;
-    r = xGridLines[xGridLines.length - 1].center;
-    t = yGridLines[0].center;
-    b = yGridLines[yGridLines.length - 1].center;
-    w2 = r - l;
-    h2 = b - t; // note that this means the chart area is exclusive of r and t.
-
+    
     // Draw
     let dispCanvas = document.createElement("canvas");
     dispCanvas.width = w; dispCanvas.height = h;
     let dispContext = dispCanvas.getContext("2d");
     dispContext.drawImage(canvases[CANVAS.BW], 0, 0);
-    dispContext.fillStyle = "rgba(255,0,0,0.5)";
+    dispContext.fillStyle = "rgba(255,255,255,0.8)";
     dispContext.fillRect(0, 0, w, h);
 
     clearSection(SECTION.DEGRID);
-    sectionDivs[SECTION.DEGRID].appendChild(dispCanvas); // this is irritating because it would be nice if all of canvases[] were offscreen, but I don't want to make a separate canvas.
-    dispCanvas.style.position = "absolute";
-    dispCanvas.style.left = "0px";
-    dispCanvas.style.right = "0px";
-    dispCanvas.style.zIndex = 1;
-    sectionDivs[SECTION.DEGRID].appendChild(canvases[CANVAS.DEGRIDDED]); // this is irritating because it would be nice if all of canvases[] were offscreen, but I don't want to make a separate canvas.
-    canvases[CANVAS.DEGRIDDED].style.position = "absolute";
-    canvases[CANVAS.DEGRIDDED].style.left = "0px";
-    canvases[CANVAS.DEGRIDDED].style.right = "0px";
-    canvases[CANVAS.DEGRIDDED].style.zIndex = 2;
-    sectionDivs[SECTION.DEGRID].style.height = h;
+    sectionDivs[SECTION.DEGRID].style.position = "relative";
+    sectionDivs[SECTION.DEGRID].style.height = h+editorSize;
+    sectionDivs[SECTION.DEGRID].style.width = w+editorSize;
+    putAtAbsolutePosition(dispCanvas, sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 1);
+    putAtAbsolutePosition(canvases[CANVAS.DEGRIDDED], sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 2);
 
+    // Draw guidelines
+    dispContext.fillStyle = "red";
+    for (let i = 0; i < xGridLines.length; i++) {
+        let center = xGridLines[i].center;
+        dispContext.fillRect(center, 0, 1, h);
+        createGridLineEditor(xGridLines[i]);
+    }
+    for (let i = 0; i < yGridLines.length; i++) {
+        let center = yGridLines[i].center;
+        dispContext.fillRect(0, center, w, 1);
+        createGridLineEditor(yGridLines[i]);
+    }
+    
     resetupCleanUI();
 
+}
+
+function createGridLineEditor (gridLine) {
+
+    const isV = (gridLine.dir == "v");
+
+    // Create functional elements
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = true;
+    checkbox.addEventListener("click", function () {
+        if(this.checked)
+            gridLine.erase();
+        else
+            gridLine.restore();
+        gridLine.active = this.checked;
+        resetupCleanUI();
+    })
+
+    // Pack and align
+    const div = document.createElement("div");
+
+    if(isV){
+        div.style.width = editorSize;
+        div.style.height = editorSize;
+        div.style.textAlign = "center";
+        div.appendChild(checkbox);
+    } else {
+        div.style.width = editorSize;
+        div.style.height = editorSize;
+        div.style.display = "inline-flex";
+        div.style.alignItems = "center";
+        div.appendChild(checkbox);
+    }
+
+    // Position
+    const x = isV ? gridLine.center : w;
+    const y = isV ? h : gridLine.center;
+    const xAnchor = isV ? 0 : -1;
+    const yAnchor = isV ? -1 : 0;
+    putAtAbsolutePosition(div, sectionDivs[SECTION.DEGRID], x, y, xAnchor, yAnchor);
+}
+
+// UI interface to set degrid params
+
+const degridDetectionSlider = document.getElementById("degrid-detection-slider");
+const degridDetectionNumber = document.getElementById("degrid-detection-number");
+degridDetectionSlider.value = degridParams.detectionThreshold * 100;
+degridDetectionNumber.value = degridParams.detectionThreshold * 100;
+function setDegridDetectionThreshold(percentage) {
+    degridParams.detectionThreshold = percentage / 100;
+    degridDetectionSlider.value = percentage;
+    degridDetectionNumber.value = percentage;
+    if (progress >= SECTION.DEGRID)
+        recomputeDegrid();
+}
+
+const degridSlopeSlider = document.getElementById("degrid-slope-slider");
+const degridSlopeNumber = document.getElementById("degrid-slope-number");
+degridSlopeSlider.value = degridParams.slopeThreshold * 100;
+degridSlopeNumber.value = degridParams.slopeThreshold * 100;
+function setDegridSlopeThreshold(percentage) {
+    // This could also be optimized similar to setDegridDefaultMargin, but
+    // it would take effort and I'm lazy.
+    degridParams.slopeThreshold = percentage / 100;
+    degridSlopeSlider.value = percentage;
+    degridSlopeNumber.value = percentage;
+    if (progress >= SECTION.DEGRID)
+        recomputeDegrid();
+}
+
+const degridDefMarginNumber = document.getElementById("degrid-defmargin-number");
+degridDefMarginNumber.value = degridParams.defaultMargin;
+function setDegridDefaultMargin(value) {
+    degridParams.defaultMargin = parseInt(value);
+    degridDefMarginNumber.value = value;
+    // We could restore all default-margin grid lines, change the default,
+    // then erase them again, but assuming that most grid lines are default,
+    // it should be faster to simply blit a fresh image and erase from that.
+    if (progress >= SECTION.DEGRID) {
+        contexts[CANVAS.DEGRIDDED].clearRect(0, 0, w, h);
+        contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, 0);
+        for (let i = 0; i < xGridLines.length; i++)
+            xGridLines[i].erase();
+        for (let i = 0; i < yGridLines.length; i++)
+            yGridLines[i].erase();
+        console.log(xGridLines);
+    }
+    resetupCleanUI();
 }

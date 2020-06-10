@@ -1,5 +1,15 @@
 function resetupCleanUI () {
 
+    // Find chart area bounds
+    let activeX = xGridLines.filter((element)=>element.active);
+    l = activeX[0].center;
+    r = activeX[activeX.length - 1].center;
+    let activeY = yGridLines.filter((element)=>element.active);
+    t = activeY[0].center;
+    b = activeY[activeY.length - 1].center;
+    w2 = r - l;
+    h2 = b - t; // note that this means the chart area is exclusive of r and t.
+
     progress = SECTION.CLEAN;
 
     let dispCanvas = document.createElement("canvas");

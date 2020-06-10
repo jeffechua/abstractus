@@ -19,19 +19,63 @@
     <hr />
     <p>
         <h3>Bwify <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button>
-        <table><tr>
-            <td>Cutoff:</td>
-            <td><input type="number" min="0.0" max="1.0" step="0.02" id="bwify-thresh-number" style="width:50px" onchange="bwifyNumberChanged();"></td>
-            <td><input type="range" min="0.0" max="1.0" step="0.02" class="slider" id="bwify-thresh-slider" onchange="bwifySliderChanged()"></td>
-            <td><button id="bwifyReset" onclick="bwifyNumber.value=bwifyParams.defaultIntensityThreshold; bwifyNumberChanged()">Reset</button></td>
-        </tr></table></h3>
+            <table>
+                <tr>
+                    <td>Cutoff:</td>
+                    <td><input type="number" min="0.0" max="1.0" step="0.02" id="bwify-thresh-number" style="width:50px"
+                            onchange="setBwifyIntensityThreshold(this.value);"></td>
+                    <td><input type="range" min="0.0" max="1.0" step="0.02" class="slider" id="bwify-thresh-slider"
+                            onchange="setBwifyIntensityThreshold(this.value);"></td>
+                    <td><button
+                            onclick="setBwifyIntensityThreshold(defaultBwifyParams.intensityThreshold)">Reset</button>
+                    </td>
+                </tr>
+            </table>
+        </h3>
     </p>
     <div id="bwify-div" style="display:none">
         <canvas id="bwify-canvas"></canvas>
     </div>
     <hr />
     <p>
-        <h3>Degridding <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button></h3>
+        <h3>Degridding <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button>
+            <table>
+                <tr>
+                    <td><a
+                            title="When the frequency (in % of max registered frequency) exceeds this value, a grid line is registered.">Detection
+                            threshold</a> (%):</td>
+                    <td><input type="number" min="0" max="100" id="degrid-detection-number" style="width:50px"
+                            onchange="setDegridDetectionThreshold(this.value);"></td>
+                    <td><input type="range" min="0" max="100" class="slider" id="degrid-detection-slider"
+                            onchange="setDegridDetectionThreshold(this.value);"></td>
+                    <td><button
+                            onclick="setDegridDetectionThreshold(defaultDegridParams.detectionThreshold*100);">Reset</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><a
+                            title="After a grid line is registered, its registered span is extended in both directions until the rate of decrease of the frequency graph (in % of max registered frequency / pixel) goes below this threshold.">Slope
+                            threshold</a> (%/px):</td>
+                    <td><input type="number" min="0" max="100" id="degrid-slope-number" style="width:50px"
+                            onchange="setDegridSlopeThreshold(this.value);"></td>
+                    <td><input type="range" min="0" max="100" class="slider" id="degrid-slope-slider"
+                            onchange="setDegridSlopeThreshold(this.value);"></td>
+                    <td><button
+                            onclick="setDegridSlopeThreshold(defaultDegridParams.slopeThreshold*100);">Reset</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><a
+                            title="After a grid line's span is resolved as per the slope threshold, a further margin of this number of pixels is added to the front and back (unless specifically set otherwise in the advanced interface below).">Default
+                            margin</a> (px):</td>
+                    <td><input type="number" min="0" max="100" id="degrid-defmargin-number" style="width:50px"
+                            onchange="setDegridDefaultMargin(this.value);"></td>
+                    <td></td>
+                    <td><button onclick="setDegridDefaultMargin(defaultDegridParams.defaultMargin);">Reset</button>
+                    </td>
+                </tr>
+            </table>
+        </h3>
     </p>
     <div id="degrid-div" style="display:none"></div>
     <hr />
@@ -140,6 +184,48 @@
 
     }
 
+    function parseLength(text) {
+        return parseInt(text.substr(0, text.length - 2));
+    }
+
+    // anchor: -1 = left, 0 = center, 1 = right
+    // radius is half the width given for the element to center itself in for the centering trick.
+    function putAtAbsolutePosition(element, container, x, y, xAnchor, yAnchor, z = -1, radius = 100) {
+
+        container.appendChild(element);
+        element.style.position = "absolute";
+
+        switch (xAnchor) {
+            case -1:
+                element.style.left = x + "px";
+                break;
+            case 0:
+                element.style.left = (x - radius) + "px";
+                element.style.right = (parseLength(container.style.width) - (x + radius)) + "px";
+                element.style.marginLeft = "auto";
+                element.style.marginRight = "auto";
+                break;
+            case 1:
+                element.style.right = x + "px";
+        }
+
+        switch (yAnchor) {
+            case -1:
+                element.style.top = y + "px";
+                break;
+            case 0:
+                element.style.top = (y - radius) + "px";
+                element.style.bottom = (parseLength(container.style.height) - (y + radius)) + "px";
+                element.style.marginTop = "auto";
+                element.style.marginBottom = "auto";
+                break;
+            case 1:
+                element.style.bottom = y + "px";
+        }
+
+        if (z != -1)
+            element.style.zIndex = z;
+    }
 
 </script>
 

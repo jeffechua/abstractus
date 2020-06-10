@@ -1,15 +1,15 @@
+const defaultBwifyParams = {
+    alphaThreshold: 200,     // alpha > 200
+    intensityThreshold: 0.7  // r+g+b < 500
+}
+
 const bwifyParams = {
     alphaThreshold: 200,     // alpha > 200
-    defaultIntensityThreshold: 0.7,
     intensityThreshold: 0.7  // r+g+b < 500
 }
 
 let bwifyDisplayCanvas = document.getElementById("bwify-canvas");
 let bwifyDisplayContext = bwifyDisplayCanvas.getContext("2d");
-let bwifySlider = document.getElementById("bwify-thresh-slider");
-let bwifyNumber = document.getElementById("bwify-thresh-number");
-bwifySlider.value = bwifyParams.intensityThreshold;
-bwifyNumber.value = bwifyParams.intensityThreshold;
 
 function recomputeBwify() {
 
@@ -42,15 +42,15 @@ function recomputeBwify() {
 
 }
 
-function bwifyNumberChanged() {
-    bwifyParams.intensityThreshold = bwifyNumber.value;
-    bwifySlider.value = bwifyNumber.value;
-    if (progress >= SECTION.BWIFY)
-        recomputeBwify();
-}
-function bwifySliderChanged() {
-    bwifyParams.intensityThreshold = bwifySlider.value;
-    bwifyNumber.value = bwifySlider.value;
+// UI interface to set bwify params
+let bwifySlider = document.getElementById("bwify-thresh-slider");
+let bwifyNumber = document.getElementById("bwify-thresh-number");
+bwifySlider.value = bwifyParams.intensityThreshold;
+bwifyNumber.value = bwifyParams.intensityThreshold;
+function setBwifyIntensityThreshold(value) {
+    bwifyParams.intensityThreshold = value;
+    bwifySlider.value = value;
+    bwifyNumber.value = value;
     if (progress >= SECTION.BWIFY)
         recomputeBwify();
 }

@@ -12,9 +12,10 @@ let angle;
 function recomputeRotation() {
 
     progress = SECTION.ROTATION;
-    
+
     angle = 0;
     let delta = 4.0;
+    let iterations = 0;
 
     freqs.xData = new Uint16Array(w);
     freqs.yData = new Uint16Array(h);
@@ -42,9 +43,13 @@ function recomputeRotation() {
         if (pFreqs <= currentFreqs && mFreqs <= currentFreqs) { // i.e. ±delta both worsen
             delta /= 2;
         } else {
+            // If our first correction is a minimal improvement, abort---most likely it was already correct.
+            if (iterations == 0 && Math.max(pFreqs, mFreqs, currentFreqs) - currentFreqs < currentFreqs / 100)
+                break;
             angle += (pFreqs > mFreqs) ? delta : -delta;
             currentFreqs = frequenceAtRotation(angle);
             renderWithFrequencing(angle);
+            iterations++;
         }
     }
 
@@ -89,8 +94,8 @@ function renderWithFrequencing() {
     textSize = parseInt(textSize.substr(0, textSize.length - 2));
     displayContext.putImageData(new ImageData(xFreqDisplayBitmap, w, freqDispSize), 0, h);
     displayContext.putImageData(new ImageData(yFreqDisplayBitmap, freqDispSize, h), w, 0);
-    displayContext.fillText("Angle: " + ((angle > 0) ? "+" : "") + angle, w, h+textSize);
-    displayContext.fillText("Quality: " + freqs.xMax, w, h+2*textSize);
+    displayContext.fillText("Angle: " + ((angle > 0) ? "+" : "") + angle, w, h + textSize);
+    displayContext.fillText("Quality: " + freqs.xMax, w, h + 2 * textSize);
 
 }
 
