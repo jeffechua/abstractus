@@ -17,6 +17,8 @@ let yGridLines;
 
 class GridLine {
 
+    editWidget; // UI element that allows modification of the margin
+
     constructor(lower, upper, dir, margin = -1) {
         this.lower = lower;
         this.upper = upper;
@@ -25,21 +27,27 @@ class GridLine {
         this.dir = dir;
         this._margin = margin; // This is -1 if using default. get this to check if -1; there should be no case where we want to set this.
         this.active = true;
-        this.erase();
     }
 
     get margin() { return (this._margin == -1) ? degridParams.defaultMargin : this._margin; }
     set margin(margin) {
-        this.restore();
         this._margin = margin;
-        this.erase();
+        if (this.editWidget) this.updateEditWidget()
+    }
+
+    updateEditWidget() {
+        this.editWidget.value = this.margin;
+        if (this._margin == -1)
+            this.editWidget.style.fontWeight = "normal";
+        else
+            this.editWidget.style.fontWeight = "bold";
     }
 
     get llower() { return this.lower - this.margin; }
     get uupper() { return this.upper + this.margin; }
 
     erase() {
-        let span = this.uupper - this.llower + 1; // +1 to be inclusive
+        const span = this.uupper - this.llower + 1; // +1 to be inclusive
         if (this.dir == "v")
             contexts[CANVAS.DEGRIDDED].clearRect(this.llower, 0, span, h);
         else
@@ -47,7 +55,7 @@ class GridLine {
     }
 
     restore() {
-        let span = this.uupper - this.llower + 1; // +1 to be inclusive
+        const span = this.uupper - this.llower + 1; // +1 to be inclusive
         if (this.dir == "v")
             contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], this.llower, 0, span, h, this.llower, 0, span, h);
         else
@@ -72,7 +80,6 @@ function recomputeDegrid() {
     progress = SECTION.DEGRID;
 
     // Set up for grid removal
-    contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, 0);
     let deleting = false;
     let lower = 0; let upper = 0; // lower and upper bound the deleted zone.
     l = 0; r = 0; t = 0; b = 0;
@@ -124,70 +131,102 @@ function recomputeDegrid() {
         alert("Insufficient grid lines found to establish chart area bounds.");
         return;
     }
-    
-    // Draw
-    let dispCanvas = document.createElement("canvas");
+
+    rerenderDegrid();
+
+}
+
+function rerenderDegrid() {
+
+    // Clear out and set up root div
+    clearSection(SECTION.DEGRID);
+    sectionDivs[SECTION.DEGRID].style.height = h + editorSize;
+    sectionDivs[SECTION.DEGRID].style.width = w + editorSize;
+
+    // Set up canvas[CANVAS.DEGRIDDED]
+    contexts[CANVAS.DEGRIDDED].clearRect(0, 0, w, h);
+    contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, 0);
+
+    // Set up underlying canvas
+    const dispCanvas = document.createElement("canvas");
     dispCanvas.width = w; dispCanvas.height = h;
-    let dispContext = dispCanvas.getContext("2d");
+    const dispContext = dispCanvas.getContext("2d");
     dispContext.drawImage(canvases[CANVAS.BW], 0, 0);
     dispContext.fillStyle = "rgba(255,255,255,0.8)";
     dispContext.fillRect(0, 0, w, h);
 
-    clearSection(SECTION.DEGRID);
-    sectionDivs[SECTION.DEGRID].style.position = "relative";
-    sectionDivs[SECTION.DEGRID].style.height = h+editorSize;
-    sectionDivs[SECTION.DEGRID].style.width = w+editorSize;
+    // Pack everything into the document
     putAtAbsolutePosition(dispCanvas, sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 1);
     putAtAbsolutePosition(canvases[CANVAS.DEGRIDDED], sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 2);
 
-    // Draw guidelines
+    // Draw grid lines
     dispContext.fillStyle = "red";
     for (let i = 0; i < xGridLines.length; i++) {
-        let center = xGridLines[i].center;
-        dispContext.fillRect(center, 0, 1, h);
-        createGridLineEditor(xGridLines[i]);
+        // Editing widget
+        createEditWidget(xGridLines[i]);
+        if (xGridLines[i].active) {
+            // Guide on underlying canvas
+            let center = xGridLines[i].center;
+            dispContext.fillRect(center, 0, 1, h);
+            // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
+            if (xGridLines[i].active) xGridLines[i].erase();
+        }
     }
     for (let i = 0; i < yGridLines.length; i++) {
-        let center = yGridLines[i].center;
-        dispContext.fillRect(0, center, w, 1);
-        createGridLineEditor(yGridLines[i]);
+        // Editing widget
+        createEditWidget(yGridLines[i]);
+        if (yGridLines[i].active) {
+            // Guide on underlying canvas
+            let center = yGridLines[i].center;
+            dispContext.fillRect(0, center, w, 1);
+            // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
+            yGridLines[i].erase();
+        }
     }
-    
-    resetupCleanUI();
 
+    resetupCleanUI();
 }
 
-function createGridLineEditor (gridLine) {
+function createEditWidget(gridLine) {
 
     const isV = (gridLine.dir == "v");
 
     // Create functional elements
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.checked = true;
+    checkbox.checked = gridLine.active;
     checkbox.addEventListener("click", function () {
-        if(this.checked)
-            gridLine.erase();
-        else
-            gridLine.restore();
         gridLine.active = this.checked;
-        resetupCleanUI();
+        rerenderDegrid();
+    })
+    gridLine.editWidget = document.createElement("input");
+    gridLine.editWidget.type = "number";
+    gridLine.editWidget.style.width = "30px";
+    gridLine.editWidget.min = 0;
+    gridLine.editWidget.max = 9;
+    gridLine.updateEditWidget();
+    gridLine.editWidget.addEventListener("change", function () {
+        gridLine.margin = parseInt(this.value);
+        rerenderDegrid();
     })
 
     // Pack and align
     const div = document.createElement("div");
 
-    if(isV){
+    if (isV) {
         div.style.width = editorSize;
         div.style.height = editorSize;
         div.style.textAlign = "center";
         div.appendChild(checkbox);
+        div.appendChild(document.createElement("br"));
+        div.appendChild(gridLine.editWidget);
     } else {
         div.style.width = editorSize;
         div.style.height = editorSize;
         div.style.display = "inline-flex";
         div.style.alignItems = "center";
         div.appendChild(checkbox);
+        div.appendChild(gridLine.editWidget);
     }
 
     // Position
@@ -217,7 +256,7 @@ const degridSlopeNumber = document.getElementById("degrid-slope-number");
 degridSlopeSlider.value = degridParams.slopeThreshold * 100;
 degridSlopeNumber.value = degridParams.slopeThreshold * 100;
 function setDegridSlopeThreshold(percentage) {
-    // This could also be optimized similar to setDegridDefaultMargin, but
+    // This could also be optimized similar to only partially recompute, but
     // it would take effort and I'm lazy.
     degridParams.slopeThreshold = percentage / 100;
     degridSlopeSlider.value = percentage;
@@ -234,14 +273,6 @@ function setDegridDefaultMargin(value) {
     // We could restore all default-margin grid lines, change the default,
     // then erase them again, but assuming that most grid lines are default,
     // it should be faster to simply blit a fresh image and erase from that.
-    if (progress >= SECTION.DEGRID) {
-        contexts[CANVAS.DEGRIDDED].clearRect(0, 0, w, h);
-        contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, 0);
-        for (let i = 0; i < xGridLines.length; i++)
-            xGridLines[i].erase();
-        for (let i = 0; i < yGridLines.length; i++)
-            yGridLines[i].erase();
-        console.log(xGridLines);
-    }
-    resetupCleanUI();
+    if (progress >= SECTION.DEGRID)
+        rerenderDegrid();
 }

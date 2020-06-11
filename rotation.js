@@ -1,6 +1,6 @@
 // TODO: OPTIMIZE RECOMPUTEROTATION; WE NEED TO REUSE OLD FREQUENCINGS INSTEAD OF RECALCULATING REDUNDANTLY
 
-let freqs = {
+const freqs = {
     xData: null,
     yData: null,
     xMax: 0,
@@ -25,13 +25,13 @@ function recomputeRotation() {
     clearSection(SECTION.ROTATION);
 
     // Initial frequence
-    let currentFreqs = frequenceAtRotation(angle);
+    let currentQuality = frequenceAtRotation(angle);
     renderWithFrequencing("0");
 
     // Solve for highest xMax
     while (delta > 0.05) { // i.e. 0.0625 or larger
-        let pFreqs = frequenceAtRotation(angle + delta);
-        let mFreqs = frequenceAtRotation(angle - delta);
+        let pQuality = frequenceAtRotation(angle + delta);
+        let mQuality = frequenceAtRotation(angle - delta);
         // the higher xMax, the higher quality, since at perfect alignment a whole grid line collapses to one pixel
         // xMax is used instead of yMax since the x-axis label creates a spike in the yFreq spectrum.
         //          P
@@ -40,20 +40,20 @@ function recomputeRotation() {
         // M =  R   R   +          -/+: increment or decrement angle
         //   <  -   -   ?            ?: the higher of P or M wins
         //
-        if (pFreqs <= currentFreqs && mFreqs <= currentFreqs) { // i.e. ±delta both worsen
+        if (pQuality <= currentQuality && mQuality <= currentQuality) { // i.e. ±delta both worsen
             delta /= 2;
         } else {
             // If our first correction is a minimal improvement, abort---most likely it was already correct.
-            if (iterations == 0 && Math.max(pFreqs, mFreqs, currentFreqs) - currentFreqs < currentFreqs / 100)
+            if (iterations == 0 && Math.max(pQuality, mQuality, currentQuality) - currentQuality < currentQuality / 100)
                 break;
-            angle += (pFreqs > mFreqs) ? delta : -delta;
-            currentFreqs = frequenceAtRotation(angle);
+            angle += (pQuality > mQuality) ? delta : -delta;
+            currentQuality = frequenceAtRotation(angle);
             renderWithFrequencing(angle);
             iterations++;
         }
     }
 
-    frequenceAtRotation(angle); // in case we broke right after an mFreqs evaluation.
+    frequenceAtRotation(angle); // in case we broke right after an mQuality evaluation.
     // This ensures global bwBitmap and freqs match the most recent render
 
     recomputeBwify();
@@ -80,18 +80,17 @@ function renderWithFrequencing() {
 
     // Render global freqs with global canvases[CANVAS.ROTATED]
 
-    let xFreqDisplayBitmap = new Uint8ClampedArray(freqDispSize * w * 4);
+    const xFreqDisplayBitmap = new Uint8ClampedArray(freqDispSize * w * 4);
     for (let x = 0; x < w; x++)
         for (let y = 1; y <= freqs.xData[x] * freqDispSize / freqs.xMax; y++)
             xFreqDisplayBitmap[(x + y * w) * 4 + 3] = 255;
 
-    let yFreqDisplayBitmap = new Uint8ClampedArray(freqDispSize * h * 4);
+    const yFreqDisplayBitmap = new Uint8ClampedArray(freqDispSize * h * 4);
     for (let y = 0; y < h; y++)
         for (let x = 1; x <= freqs.yData[y] * freqDispSize / freqs.yMax; x++)
             yFreqDisplayBitmap[(x + y * freqDispSize) * 4 + 3] = 255;
 
-    textSize = displayContext.font.split(" ")[0];
-    textSize = parseInt(textSize.substr(0, textSize.length - 2));
+    textSize = parseLength(displayContext.font.split(" ")[0]);
     displayContext.putImageData(new ImageData(xFreqDisplayBitmap, w, freqDispSize), 0, h);
     displayContext.putImageData(new ImageData(yFreqDisplayBitmap, freqDispSize, h), w, 0);
     displayContext.fillText("Angle: " + ((angle > 0) ? "+" : "") + angle, w, h + textSize);
@@ -128,7 +127,7 @@ function frequenceAtRotation(angle) {
             }
         }
     }
-
+    [].find
     // Compute maxes
     freqs.xMax = freqs.xData.reduce((prev, curr) => Math.max(prev, curr));
     freqs.yMax = freqs.yData.reduce((prev, curr) => Math.max(prev, curr));

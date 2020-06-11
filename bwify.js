@@ -8,14 +8,14 @@ const bwifyParams = {
     intensityThreshold: 0.7  // r+g+b < 500
 }
 
-let bwifyDisplayCanvas = document.getElementById("bwify-canvas");
-let bwifyDisplayContext = bwifyDisplayCanvas.getContext("2d");
+const bwifyDisplayCanvas = document.getElementById("bwify-canvas");
+const bwifyDisplayContext = bwifyDisplayCanvas.getContext("2d");
 
 function recomputeBwify() {
 
     progress = SECTION.BWIFY;
 
-    let bwBitmap = new Uint8ClampedArray(w * h * 4);
+    const bwBitmap = new Uint8ClampedArray(w * h * 4);
 
     // Calculate bwBitmap from rotatedBitmap
     for (let x = 0; x < w; x++) {
@@ -43,8 +43,8 @@ function recomputeBwify() {
 }
 
 // UI interface to set bwify params
-let bwifySlider = document.getElementById("bwify-thresh-slider");
-let bwifyNumber = document.getElementById("bwify-thresh-number");
+const bwifySlider = document.getElementById("bwify-thresh-slider");
+const bwifyNumber = document.getElementById("bwify-thresh-number");
 bwifySlider.value = bwifyParams.intensityThreshold;
 bwifyNumber.value = bwifyParams.intensityThreshold;
 function setBwifyIntensityThreshold(value) {
