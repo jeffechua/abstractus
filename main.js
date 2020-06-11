@@ -6,13 +6,15 @@ const SECTION = {
     ROTATION: 0,
     BWIFY: 1,
     DEGRID: 2,
-    CLEAN: 3
+    CLEAN: 3,
+    REDUCTION: 4
 }
 const sectionNames = [
     "rotation",
     "bwify",
     "degrid",
-    "clean"
+    "clean",
+    "reduction"
 ]
 const sectionToggles = [];
 const sectionDivs = [];
@@ -61,6 +63,7 @@ let l = 0; let r = 0; let t = 0; let b = 0; // bounds of *chart area*
 
 let rotatedBitmap; // bitmap data of canvases[CANVAS.ROTATED]
 let bwBitmap;      // bitmap data of canvases[CANVAS.BW]
+let cleanedBitmap; // bitmap data of canvases[CANVAS.POSTCLEAN], but note this is processed DESTRUCTIVELY in the same function call it is created.
 
 let progress = -1;
 

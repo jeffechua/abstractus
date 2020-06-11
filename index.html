@@ -80,11 +80,12 @@
     <div id="degrid-div" style="display:none; position:relative"></div>
     <hr />
     <p>
-        <h3>Clean <button id="clean-toggle" onclick="toggleSection(SECTION.CLEAN);">Show</button></h3>
+        <h3>Clean <button id="clean-toggle" onclick="toggleSection(SECTION.CLEAN);">Hide</button></h3>
         <div id="clean-div" style="display:block; position:relative">
-            <canvas id="clean-mask-canvas" style="position:absolute; left:0; top:0; z-index:2"></canvas>
+            <canvas id="clean-mask-canvas" style="position:absolute; left:0; top:0; z-index:2; opacity:90%"></canvas>
             <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
-            <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>
+            <canvas id="reduce-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>
+            <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:5"></canvas>
         </div>
     </p>
 </body>
@@ -94,5 +95,7 @@
 <script src="bwify.js"></script>
 <script src="degrid.js"></script>
 <script src="clean.js"></script>
+<script src="cleanUI.js"></script>
+<script src="reduction.js"></script>
 
 </html>

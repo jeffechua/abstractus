@@ -15,7 +15,7 @@ function recomputeBwify() {
 
     progress = SECTION.BWIFY;
 
-    const bwBitmap = new Uint8ClampedArray(w * h * 4);
+    bwBitmap = new Uint8ClampedArray(w * h * 4);
 
     // Calculate bwBitmap from rotatedBitmap
     for (let x = 0; x < w; x++) {

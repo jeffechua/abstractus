@@ -1,13 +1,16 @@
 
-putAtAbsolutePosition(canvases[CANVAS.POSTCROP], sectionDivs[SECTION.CLEAN], 0, 0, -1, -1, 1);
-const frameCanvas = document.getElementById("clean-frame-canvas");
-const frameContext = frameCanvas.getContext("2d");
-const maskCanvas = document.getElementById("clean-mask-canvas");
-const maskContext = maskCanvas.getContext("2d");
-const cleanUICanvas = document.getElementById("clean-ui-canvas");
-const cleanUIContext = cleanUICanvas.getContext("2d");
+// Arrays over w2 and h2 respectively, 0=false where there is no gridline and 1=true where there is
+let xGridLookup;
+let yGridLookup;
 
-function resetupCleanUI() {
+function recomputeClean() {
+
+    if (xGridLines.length <= 1 || yGridLines.length <= 1) {
+        alert("Insufficient grid lines found to establish chart area bounds. Aborting.");
+        return;
+    }
+
+    progress = SECTION.CLEAN;
 
     // Find chart area bounds
     const activeX = xGridLines.filter((element) => element.active);
@@ -19,72 +22,81 @@ function resetupCleanUI() {
     w2 = r - l;
     h2 = b - t; // note that this means the chart area is exclusive of r and t.
 
-    progress = SECTION.CLEAN;
-
-    // Size the rest of the working canvases for the process
+    // Size the rest of the working canvases
     for (let i = CANVAS.POSTCROP; i < CANVAS.FINAL; i++) {
         canvases[i].width = w2; canvases[i].height = h2;
     }
 
-    // Size our canvases
-    frameCanvas.width = w; frameCanvas.height = h;
-    maskCanvas.width = w2; maskCanvas.height = h2;
-    cleanUICanvas.width = w; cleanUICanvas.height = h;
-    // Position those the require it
-    maskCanvas.style.left = l; maskCanvas.style.top = t;
-    canvases[CANVAS.POSTCROP].style.left = l;
-    canvases[CANVAS.POSTCROP].style.top = t;
-
-    // Initial draws and set up
-    contexts[CANVAS.POSTCROP].drawImage(canvases[CANVAS.DEGRIDDED], l, t, w2, h2, 0, 0, w2, h2);
-    frameContext.drawImage(canvases[CANVAS.ROTATED], 0, 0);
-    frameContext.clearRect(l, t, w2, h2);
-    maskContext.fillStyle = "white"; // This cannot be done outside since resizing the
-    maskContext.globalAlpha = 0.9;   // canvas clears all context state.
-    
-
-    const cleanDrawStart = function (e) {
-        cleanUIState.drawing = true;
-        cleanUIState.x = e.offsetX;
-        cleanUIState.y = e.offsetY;
-        cleanUIState.delete = !e.shiftKey;
-        cleanUIContext.strokeStyle = cleanUIState.delete ? "red" : "green";
+    // Recompute grid lookups
+    xGridLookup = new Uint8Array(w2);
+    yGridLookup = new Uint8Array(h2);
+    for (let i = 0; i < xGridLines.length; i++) {
+        lower = Math.max(xGridLines[i].llower - l, 0);
+        upper = Math.min(xGridLines[i].uupper - l, w2 - 1);
+        for (let x = lower; x <= upper; x++)
+            xGridLookup[x] = true;
     }
-    const cleanDrawMove = function (e) {
-        if (cleanUIState.drawing != true)
-            return;
-        cleanUIContext.clearRect(0, 0, w, h);
-        cleanUIContext.strokeRect(cleanUIState.x, cleanUIState.y, e.offsetX - cleanUIState.x + 1, e.offsetY - cleanUIState.y + 1);
-    }
-    const cleanDrawStop = function (e) {
-        cleanUIContext.clearRect(0, 0, w, h);
-        const x = cleanUIState.x - l;
-        const y = cleanUIState.y - t;
-        const fillWidth = e.offsetX - cleanUIState.x + 1;
-        const fillHeight = e.offsetY - cleanUIState.y + 1;
-        maskContext.clearRect(x, y, fillWidth, fillHeight);
-        if (cleanUIState.delete)
-            maskContext.fillRect(x, y, fillWidth, fillHeight);
-        cleanUIState.drawing = false;
+    for (let i = 0; i < yGridLines.length; i++) {
+        lower = Math.max(yGridLines[i].llower - t, 0);
+        upper = Math.min(yGridLines[i].uupper - t, h2 - 1);
+        for (let y = lower; y <= upper; y++)
+            yGridLookup[y] = true;
     }
 
-    cleanUICanvas.addEventListener("mousedown", cleanDrawStart);
-    cleanUICanvas.addEventListener("mousemove", cleanDrawMove);
-    cleanUICanvas.addEventListener("mouseup", cleanDrawStop);
-    cleanUICanvas.addEventListener("mouseleave", cleanDrawStop);
+    reduction.establish();
+
+    reconfigureCleanUI();
+
+    autoClean();
 
 }
 
-document.addEventListener("keydown", function (e) {
-    if (e.key == "Escape") {
-        cleanUIContext.clearRect(0, 0, w, h);
-        cleanUIState.drawing = false;
-    }
-})
+function regeneratePostCleanCanvas() {
+    contexts[CANVAS.POSTCLEAN].drawImage(canvases[CANVAS.POSTCROP], 0, 0);
+    contexts[CANVAS.POSTCLEAN].drawImage(maskCanvas, 0, 0);
+    recomputeReduction();
+}
 
-const cleanUIState = {
-    x: 0,
-    y: 0,
-    drawing: false,
-    delete: false
+function autoClean(e) {
+    maskContext.clearRect(0,0,w2,h2);
+    for (let i = 0; i < reduction.vGridLines.length; i++) {
+        const lv = reduction.vGridLines[i].llower-1-reduction.vLower; // immediate left of grid line
+        const uv = reduction.vGridLines[i].uupper+1-reduction.vLower; // immediate right of grid line
+        let triggered = false;
+        let lu; // bottom of current triggered zone
+        let uu; // top of current triggered zone
+        let llv; // left of current triggered zone <= lu
+        let uuv; // right of current triggered zone >= uu
+        for(let u = 0; u < reduction.uSize; u++) {
+            if(reduction.uGridLookup[u] == true)
+                continue;
+            let ltrig = reduction.isBlack(u, lv);
+            let utrig = reduction.isBlack(u, uv);
+            if(!triggered && (ltrig || utrig)) { // starting a triggered zone
+                triggered = true;
+                lu = u;
+                llv = lv;
+                uuv = uv;
+            } else if(triggered && !(ltrig || utrig)) { // closing a triggered zone
+                triggered = false;
+                uu = u-1;
+                uSize = uu-lu+1;
+                vSize = uuv-llv+1;
+                if(reduction.axis)
+                    maskContext.fillRect(lu, llv, uSize, vSize);
+                else
+                    maskContext.fillRect(llv, lu, vSize, uSize);
+            }
+            if(triggered) {
+                let v;
+                // walk towards -u until we find nonblack
+                for(v = lv; v >= 0 && reduction.isBlack(u, v); v--) {} v++;
+                if(v < llv) llv = v;
+                // walk towards +u until we find nonblack
+                for(v = uv; v < reduction.vSize && reduction.isBlack(u, v); v++) {} v--;
+                if(v > uuv) uuv = v;
+            }
+        }
+    }
+    regeneratePostCleanCanvas();
 }

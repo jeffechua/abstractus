@@ -19,12 +19,10 @@ class GridLine {
 
     editWidget; // UI element that allows modification of the margin
 
-    constructor(lower, upper, dir, margin = -1) {
+    constructor(lower, upper, vertical, margin = -1) {
         this.lower = lower;
         this.upper = upper;
-        if (dir != "v" && dir != "h")
-            alert("Invalid grid line direction, assuming y.");
-        this.dir = dir;
+        this.vertical = vertical;
         this._margin = margin; // This is -1 if using default. get this to check if -1; there should be no case where we want to set this.
         this.active = true;
     }
@@ -48,7 +46,7 @@ class GridLine {
 
     erase() {
         const span = this.uupper - this.llower + 1; // +1 to be inclusive
-        if (this.dir == "v")
+        if (this.vertical)
             contexts[CANVAS.DEGRIDDED].clearRect(this.llower, 0, span, h);
         else
             contexts[CANVAS.DEGRIDDED].clearRect(0, this.llower, w, span);
@@ -56,7 +54,7 @@ class GridLine {
 
     restore() {
         const span = this.uupper - this.llower + 1; // +1 to be inclusive
-        if (this.dir == "v")
+        if (this.vertical)
             contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], this.llower, 0, span, h, this.llower, 0, span, h);
         else
             contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, this.llower, w, span, 0, this.llower, w, span);
@@ -65,7 +63,7 @@ class GridLine {
     get center() {
         let integral = 0;
         let area = 0;
-        const array = (this.dir == "v") ? freqs.xData : freqs.yData;
+        const array = (this.vertical) ? freqs.xData : freqs.yData;
         for (let i = this.lower; i <= this.upper; i++) {
             integral += i * array[i];
             area += array[i];
@@ -98,13 +96,13 @@ function recomputeDegrid() {
             // Forwardtrack to find end of deletion zone
             while (upper < w - 3 && freqs.xData[upper + 1] - freqs.xData[upper + 2] > degridParams.slopeThreshold * freqs.xMax)
                 upper++;
-            xGridLines.push(new GridLine(lower, upper, "v"));
+            xGridLines.push(new GridLine(lower, upper, true));
             // Skip x to upper to save time technically the variable "upper" is unnecessary, but this way is more readable
             x = upper;
         }
     }
     if (deleting) { // Clean up loose ends
-        xGridLines.push(new GridLine(lower, w - 1, "v"));
+        xGridLines.push(new GridLine(lower, w - 1, true));
     }
 
     // Delete vertical grid lines
@@ -120,17 +118,12 @@ function recomputeDegrid() {
             // Find upper bound of deletion zone
             while (upper < w - 3 && freqs.yData[upper + 1] - freqs.yData[upper + 2] > degridParams.slopeThreshold * freqs.yMax)
                 upper++;
-            yGridLines.push(new GridLine(lower, upper, "h"));
+            yGridLines.push(new GridLine(lower, upper, false));
             y = upper;
         }
     }
     if (deleting) // Clean up loose ends
-        yGridLines.push(new GridLine(lower, h - 1, "h"));
-
-    if (xGridLines.length <= 0 || yGridLines.length <= 1) {
-        alert("Insufficient grid lines found to establish chart area bounds.");
-        return;
-    }
+        yGridLines.push(new GridLine(lower, h - 1, false));
 
     rerenderDegrid();
 
@@ -184,12 +177,10 @@ function rerenderDegrid() {
         }
     }
 
-    resetupCleanUI();
+    recomputeClean();
 }
 
 function createEditWidget(gridLine) {
-
-    const isV = (gridLine.dir == "v");
 
     // Create functional elements
     const checkbox = document.createElement("input");
@@ -213,7 +204,7 @@ function createEditWidget(gridLine) {
     // Pack and align
     const div = document.createElement("div");
 
-    if (isV) {
+    if (gridLine.vertical) {
         div.style.width = editorSize;
         div.style.height = editorSize;
         div.style.textAlign = "center";
@@ -230,10 +221,10 @@ function createEditWidget(gridLine) {
     }
 
     // Position
-    const x = isV ? gridLine.center : w;
-    const y = isV ? h : gridLine.center;
-    const xAnchor = isV ? 0 : -1;
-    const yAnchor = isV ? -1 : 0;
+    const x = gridLine.vertical ? gridLine.center : w;
+    const y = gridLine.vertical ? h : gridLine.center;
+    const xAnchor = gridLine.vertical ? 0 : -1;
+    const yAnchor = gridLine.vertical ? -1 : 0;
     putAtAbsolutePosition(div, sectionDivs[SECTION.DEGRID], x, y, xAnchor, yAnchor);
 }
 
