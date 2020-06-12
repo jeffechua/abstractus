@@ -15,6 +15,9 @@ const editorSize = 50;
 let xGridLines;
 let yGridLines;
 
+const degridGuideCanvas = document.createElement("canvas");
+const degridGuideContext = degridGuideCanvas.getContext("2d");
+
 class GridLine {
 
     editWidget; // UI element that allows modification of the margin
@@ -46,10 +49,13 @@ class GridLine {
 
     erase() {
         const span = this.uupper - this.llower + 1; // +1 to be inclusive
-        if (this.vertical)
+        if (this.vertical) {
             contexts[CANVAS.DEGRIDDED].clearRect(this.llower, 0, span, h);
-        else
-            contexts[CANVAS.DEGRIDDED].clearRect(0, this.llower, w, span);
+            contexts[CANVAS.DEGRIDDED].fillRect(this.llower, 0, span, h);
+        }else{                                                             
+            contexts[CANVAS.DEGRIDDED].clearRect(0, this.llower, w, span); 
+            contexts[CANVAS.DEGRIDDED].fillRect(0, this.llower, w, span);
+        }
     }
 
     restore() {
@@ -139,28 +145,25 @@ function rerenderDegrid() {
     // Set up canvas[CANVAS.DEGRIDDED]
     contexts[CANVAS.DEGRIDDED].clearRect(0, 0, w, h);
     contexts[CANVAS.DEGRIDDED].drawImage(canvases[CANVAS.BW], 0, 0);
+    contexts[CANVAS.DEGRIDDED].fillStyle = "rgba(255,255,255,0.8)";
 
-    // Set up underlying canvas
-    const dispCanvas = document.createElement("canvas");
-    dispCanvas.width = w; dispCanvas.height = h;
-    const dispContext = dispCanvas.getContext("2d");
-    dispContext.drawImage(canvases[CANVAS.BW], 0, 0);
-    dispContext.fillStyle = "rgba(255,255,255,0.8)";
-    dispContext.fillRect(0, 0, w, h);
+    // Set up guide canvas, because this wasn't covered in the canvases[] sweep.
+    degridGuideCanvas.width = w; degridGuideCanvas.height = h;
 
-    // Pack everything into the document
-    putAtAbsolutePosition(dispCanvas, sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 1);
+    // Pack canvases in
+    putAtAbsolutePosition(canvases[CANVAS.BW], sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 1);
     putAtAbsolutePosition(canvases[CANVAS.DEGRIDDED], sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 2);
+    putAtAbsolutePosition(degridGuideCanvas, sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 3);
 
     // Draw grid lines
-    dispContext.fillStyle = "red";
+    degridGuideContext.fillStyle = "red";
     for (let i = 0; i < xGridLines.length; i++) {
         // Editing widget
         createEditWidget(xGridLines[i]);
         if (xGridLines[i].active) {
             // Guide on underlying canvas
             let center = xGridLines[i].center;
-            dispContext.fillRect(center, 0, 1, h);
+            degridGuideContext.fillRect(center, 0, 1, h);
             // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
             if (xGridLines[i].active) xGridLines[i].erase();
         }
@@ -171,13 +174,13 @@ function rerenderDegrid() {
         if (yGridLines[i].active) {
             // Guide on underlying canvas
             let center = yGridLines[i].center;
-            dispContext.fillRect(0, center, w, 1);
+            degridGuideContext.fillRect(0, center, w, 1);
             // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
             yGridLines[i].erase();
         }
     }
 
-    recomputeClean();
+    setupFinalize();
 }
 
 function createEditWidget(gridLine) {

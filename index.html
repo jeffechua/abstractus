@@ -80,12 +80,26 @@
     <div id="degrid-div" style="display:none; position:relative"></div>
     <hr />
     <p>
-        <h3>Clean <button id="clean-toggle" onclick="toggleSection(SECTION.CLEAN);">Hide</button></h3>
-        <div id="clean-div" style="display:block; position:relative">
+        <h3>Finalize <button id="finalize-toggle" onclick="toggleSection(SECTION.FINALIZE);">Hide</button></h3>
+        <table>
+            <tr>
+                <td>Independent variable:</td>
+                <td><button id="uv-switch" onclick="uvSwitch(this);">x</button></td><br />
+            </tr>
+        </table>
+        <div id="finalize-div" style="display:block; position:relative">
             <canvas id="clean-mask-canvas" style="position:absolute; left:0; top:0; z-index:2; opacity:90%"></canvas>
             <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
             <canvas id="reduce-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>
             <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:5"></canvas>
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="x-min-input"
+                onchange="setOutputBounds(this, 0);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="x-max-input"
+                onchange="setOutputBounds(this, 1);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="y-min-input"
+                onchange="setOutputBounds(this, 2);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="y-max-input"
+                onchange="setOutputBounds(this, 3);">
         </div>
     </p>
 </body>
@@ -95,7 +109,9 @@
 <script src="bwify.js"></script>
 <script src="degrid.js"></script>
 <script src="clean.js"></script>
-<script src="cleanUI.js"></script>
-<script src="reduction.js"></script>
+<script src="reduction-classes.js"></script>
+<script src="Reduction.js"></script>
+<script src="output.js"></script>
+<script src="finalize.js"></script>
 
 </html>

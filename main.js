@@ -6,15 +6,13 @@ const SECTION = {
     ROTATION: 0,
     BWIFY: 1,
     DEGRID: 2,
-    CLEAN: 3,
-    REDUCTION: 4
+    FINALIZE: 3
 }
 const sectionNames = [
     "rotation",
     "bwify",
     "degrid",
-    "clean",
-    "reduction"
+    "finalize"
 ]
 const sectionToggles = [];
 const sectionDivs = [];
@@ -101,10 +99,13 @@ function parseLength(text) {
 // anchor: -1 = left, 0 = center, 1 = right
 // radius is half the width given for the element to center itself in for the centering trick.
 function putAtAbsolutePosition(element, container, x, y, xAnchor, yAnchor, z = -1, radius = 100) {
-
     container.appendChild(element);
     element.style.position = "absolute";
+    reposition(element, x, y, xAnchor, yAnchor, z, radius);
+}
 
+function reposition(element, x, y, xAnchor, yAnchor, z = -1, radius = 100) {
+    const container = element.parentElement;
     switch (xAnchor) {
         case -1:
             element.style.left = x + "px";
@@ -116,7 +117,7 @@ function putAtAbsolutePosition(element, container, x, y, xAnchor, yAnchor, z = -
             element.style.marginRight = "auto";
             break;
         case 1:
-            element.style.right = x + "px";
+            element.style.right = (parseLength(container.style.width) - x) + "px";
     }
 
     switch (yAnchor) {
@@ -130,9 +131,8 @@ function putAtAbsolutePosition(element, container, x, y, xAnchor, yAnchor, z = -
             element.style.marginBottom = "auto";
             break;
         case 1:
-            element.style.bottom = y + "px";
+            element.style.bottom = (parseLength(container.style.height) - y) + "px";
     }
-
     if (z != -1)
         element.style.zIndex = z;
 }
