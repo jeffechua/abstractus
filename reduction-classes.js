@@ -118,7 +118,7 @@ class Curve {
         this.tail = first.tail;
         this.head = first.head;
         this.fragments = [first];
-        this.color = Curve.colors[Curve.c % this.color.length];
+        this.color = Curve.colors[Curve.c % Curve.colors.length];
         Curve.c++;
     }
 

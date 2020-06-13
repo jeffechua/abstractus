@@ -80,14 +80,15 @@
     <div id="degrid-div" style="display:none; position:relative"></div>
     <hr />
     <p>
-        <h3>Finalize <button id="finalize-toggle" onclick="toggleSection(SECTION.FINALIZE);">Hide</button></h3>
-        <table>
-            <tr>
-                <td>Independent variable:</td>
-                <td><button id="uv-switch" onclick="uvSwitch(this);">x</button></td><br />
-            </tr>
-        </table>
-        <div id="finalize-div" style="display:block; position:relative">
+        <h3>Finalize <button id="finalize-toggle" onclick="toggleSection(SECTION.FINALIZE);">Show</button>
+            <table>
+                <tr>
+                    <td>Independent variable:</td>
+                    <td><button id="uv-switch" onclick="uvSwitch(this);">x</button></td><br />
+                </tr>
+            </table>
+        </h3>
+        <div id="finalize-div" style="display:none; position:relative">
             <canvas id="clean-mask-canvas" style="position:absolute; left:0; top:0; z-index:2; opacity:90%"></canvas>
             <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
             <canvas id="reduce-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>

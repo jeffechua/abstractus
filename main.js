@@ -86,6 +86,8 @@ function processBitmap(bitmap) {
         canvases[i].width = w; canvases[i].height = h;
     }
 
+    toggleSection(SECTION.FINALIZE);
+
     contexts[CANVAS.ORIGINAL].drawImage(bitmap, 0, 0);
     bitmap.close();
 
