@@ -6,13 +6,15 @@ const SECTION = {
     ROTATION: 0,
     BWIFY: 1,
     DEGRID: 2,
-    FINALIZE: 3
+    FINALIZE: 3,
+    EXPORT: 4
 }
 const sectionNames = [
     "rotation",
     "bwify",
     "degrid",
-    "finalize"
+    "finalize",
+    "export"
 ]
 const sectionToggles = [];
 const sectionDivs = [];

@@ -28,7 +28,7 @@ class Fragment {
             broken = true;
             let p = Math.round(center);
             let m = p - 1;
-            while (p <= bottom + 1 && m >= top - 1) {
+            while (p <= bottom + 1 || m >= top - 1) {
                 if (p <= bottom + 1) {
                     if (Reduction.isFreshBlack(u + 1, p)) {
                         while (Reduction.isFreshBlack(u + 1, p - 1))
@@ -79,14 +79,14 @@ class Fragment {
         if (slopes) {
             reduceContext.strokeStyle = "magenta";
             reduceContext.beginPath();
-            let u1 = this.head.u; let v1 = this.head.v;
+            let u1 = this.head.u + 0.5; let v1 = this.head.v + 0.5;
             let du = Math.sqrt(reduceParams.slopeProjectDisplayPx * reduceParams.slopeProjectDisplayPx / (1 + this.head.dvdu * this.head.dvdu));
             let u2 = u1 + du; let v2 = v1 + du * this.head.dvdu;
             reduceContext.moveTo(Reduction.axis ? u1 : v1, Reduction.axis ? v1 : u1);
             reduceContext.lineTo(Reduction.axis ? u2 : v2, Reduction.axis ? v2 : u2);
             reduceContext.stroke();
             reduceContext.beginPath();
-            u1 = this.tail.u; v1 = this.tail.v;
+            u1 = this.tail.u + 0.5; v1 = this.tail.v + 0.5;
             du = Math.sqrt(reduceParams.slopeProjectDisplayPx * reduceParams.slopeProjectDisplayPx / (1 + this.head.dvdu * this.head.dvdu));
             u2 = u1 - du; v2 = v1 - du * this.tail.dvdu;
             reduceContext.moveTo(Reduction.axis ? u1 : v1, Reduction.axis ? v1 : u1);
@@ -96,8 +96,8 @@ class Fragment {
         reduceContext.strokeStyle = color;
         reduceContext.beginPath();
         for (let i = 0; i < this.data.length; i++) {
-            const u = i + this.tail.u;
-            const v = this.data[i];
+            const u = i + this.tail.u + 0.5;
+            const v = this.data[i] + 0.5;
             if (i == 0)
                 reduceContext.moveTo(Reduction.axis ? u : v, Reduction.axis ? v : u);
             else
@@ -110,10 +110,16 @@ class Fragment {
 }
 
 class Curve {
+
+    static colors = ["red", "green", "blue", "cyan", "magenta", "orange"];
+    static c = 0;
+
     constructor(first) {
         this.tail = first.tail;
         this.head = first.head;
         this.fragments = [first];
+        this.color = Curve.colors[Curve.c % this.color.length];
+        Curve.c++;
     }
 
     push(fragment) {
@@ -137,29 +143,84 @@ class Curve {
         const v1 = this.head.v;
         const u2 = offer.tail.u;
         const v2 = offer.tail.v;
-        for(let u = u1+1; u<=u2-1; u++){
-            const v = Math.round(v1 + (v2-v1) * (u-u1) / (u2-u1));
-            if(!Reduction.isBlack(u,v))
+        for (let u = u1 + 1; u <= u2 - 1; u++) {
+            const v = Math.round(v1 + (v2 - v1) * (u - u1) / (u2 - u1));
+            if (!(Reduction.isBlack(u, v) || Reduction.isBlack(u, v+1) || Reduction.isBlack(u, v-1)))
                 return false;
         }
         return true;
     }
 
-    draw(color, slopes) {
+    draw(slopes) {
         reduceContext.strokeStyle = "yellow";
         for (let i = 0; i < this.fragments.length - 1; i++) {
-            const u1 = this.fragments[i].head.u;
-            const v1 = this.fragments[i].head.v;
-            const u2 = this.fragments[i + 1].tail.u;
-            const v2 = this.fragments[i + 1].tail.v;
+            const u1 = this.fragments[i].head.u + 0.5;
+            const v1 = this.fragments[i].head.v + 0.5;
+            const u2 = this.fragments[i + 1].tail.u + 0.5;
+            const v2 = this.fragments[i + 1].tail.v + 0.5;
             reduceContext.beginPath();
             reduceContext.moveTo(Reduction.axis ? u1 : v1, Reduction.axis ? v1 : u1);
             reduceContext.lineTo(Reduction.axis ? u2 : v2, Reduction.axis ? v2 : u2);
             reduceContext.stroke();
         }
         for (let i = 0; i < this.fragments.length; i++) {
-            this.fragments[i].draw(color, slopes);
+            this.fragments[i].draw(this.color, slopes);
         }
     }
 
+}
+
+class ExportCurve {
+    constructor(curve) {
+        this.data = [];
+        this.color = curve.color;
+        this.mode = exportParams.mode;
+        this.interval = exportParams.interval;
+        for (let i = 0; i < curve.fragments.length; i++) {
+            let last = 0;
+            for (let j = 0; j < curve.fragments[i].data.length; j++) {
+                switch (this.mode) {
+                    case "all":
+                        break;
+                    case "fixed interval":
+                        if (j % this.interval != 0)
+                            continue;
+                        break;
+                    case "fixed distance":
+                        const du = j - last;
+                        const dv = curve.fragments[i].data[j] - curve.fragments[i].data[last];
+                        if (du * du + dv * dv < this.interval * this.interval)
+                            continue;
+                        last = j;
+                        break;
+                }
+                const u = j + curve.fragments[i].tail.u;
+                const v = curve.fragments[i].data[j];
+                this.data.push({
+                    x: Reduction.axis ? u : v,
+                    y: Reduction.axis ? v : u
+                });
+            }
+        }
+        this.downloadLink = this.generateDownloadLink();        
+    }
+
+    generateDownloadLink() {
+        let contents = "x,y";
+        for(let i = 0; i < this.data.length; i++){
+            contents += "\n" + exportParams.exportX(this.data[i].x) + "," + exportParams.exportY(this.data[i].y);
+        }
+        return "data:text/plain;charset=utf-8," + encodeURIComponent(contents);
+    }
+
+    draw() {
+        exportContext.strokeStyle = this.color;
+        exportContext.beginPath();
+        exportContext.moveTo(this.data[0].x + exportDrawing.l, this.data[0].y + exportDrawing.t);
+        for (let i = 1; i < this.data.length; i++) {
+            exportContext.lineTo(this.data[i].x + exportDrawing.l, this.data[i].y + exportDrawing.t);
+        }
+        exportContext.stroke();
+        return this;
+    }
 }

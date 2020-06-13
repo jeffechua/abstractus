@@ -2,7 +2,8 @@ const reduceParams = {
     maxSlopeSamplePx: 7,
     slopeProjectDisplayPx: 10,
     minFragmentSize: 7,
-    maxProjectedErrorFactor: 2
+    maxProjectedErrorFactor: 2,
+    showSlopes: false
 }
 
 let curves;
@@ -22,19 +23,16 @@ function recomputeReduction() {
         for (let v = 0; v < Reduction.vSize; v++) {
             if (Reduction.isFreshBlack(u, v)) {
                 let fragment = new Fragment(u, v);
-                if (fragment.size >= reduceParams.minFragmentSize && fragment.head.u - fragment.tail.u > 3)
                     fragments.push(fragment);
             }
         }
     }
 
-    let colors = ["red", "green", "blue", "cyan", "magenta", "orange"];
-    let c = 0;
-
     // The key thing to keep in mind in understanding this process is that
     // the fragments array, by nature of its generation method, is sorted in
     // ascending order of tail.u.
     curves = [];
+    Curve.c = 0;
     while (fragments.length > 0) {
         // Get batch of seed fragments
         let seeds = [fragments[0]];
@@ -48,13 +46,12 @@ function recomputeReduction() {
         seeds.sort((a, b) => a.size - b.size);
         while (seeds.length > 0) {
             let crv = buildCurveFromFragment(seeds.pop());
-            crv.draw(colors[c % 6], false);
-            c++;
+            crv.draw(reduceParams.showSlopes);
             curves.push(crv);
         }
     }
 
-    recomputeOutput();
+    recomputeExport();
 
 }
 

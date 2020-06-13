@@ -156,14 +156,16 @@ function rerenderDegrid() {
     putAtAbsolutePosition(degridGuideCanvas, sectionDivs[SECTION.DEGRID], 0, 0, -1, -1, 3);
 
     // Draw grid lines
-    degridGuideContext.fillStyle = "red";
+    degridGuideContext.strokeStyle = "red";
+    degridGuideContext.beginPath();
     for (let i = 0; i < xGridLines.length; i++) {
         // Editing widget
         createEditWidget(xGridLines[i]);
         if (xGridLines[i].active) {
             // Guide on underlying canvas
             let center = xGridLines[i].center;
-            degridGuideContext.fillRect(center, 0, 1, h);
+            degridGuideContext.moveTo(center+0.5,0.5);
+            degridGuideContext.lineTo(center+0.5,h-0.5);
             // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
             if (xGridLines[i].active) xGridLines[i].erase();
         }
@@ -174,7 +176,8 @@ function rerenderDegrid() {
         if (yGridLines[i].active) {
             // Guide on underlying canvas
             let center = yGridLines[i].center;
-            degridGuideContext.fillRect(0, center, w, 1);
+            degridGuideContext.moveTo(0.5,center+0.5);
+            degridGuideContext.lineTo(w-0.5, center+0.5);
             // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
             yGridLines[i].erase();
         }

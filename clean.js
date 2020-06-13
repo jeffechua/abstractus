@@ -10,7 +10,9 @@ function autoClean(e) {
         let uu; // top of current triggered zone
         let llv; // left of current triggered zone <= lu
         let uuv; // right of current triggered zone >= uu
-        for (let u = 0; u < Reduction.uSize; u++) {
+
+        let u;
+        for (u = 0; u < Reduction.uSize; u++) {
             if (Reduction.uGridLookup[u] == true)
                 continue;
             let ltrig = Reduction.isBlack(u, lv);
@@ -40,6 +42,16 @@ function autoClean(e) {
                 if (v > uuv) uuv = v;
             }
         }
+        if (triggered) { // cleanup
+            triggered = false;
+            uu = u - 1;
+            uSize = uu - lu + 1;
+            vSize = uuv - llv + 1;
+            if (Reduction.axis)
+                maskContext.fillRect(lu, llv, uSize, vSize);
+            else
+                maskContext.fillRect(llv, lu, vSize, uSize);
+        }
     }
     recomputeReduction();
 }
@@ -65,8 +77,8 @@ function cleanDrawStop(e) {
     cleanUIContext.clearRect(0, 0, w, h);
     const x = manualCleanState.x - l;
     const y = manualCleanState.y - t;
-    const fillWidth = e.offsetX - manualCleanState.x + 1;
-    const fillHeight = e.offsetY - manualCleanState.y + 1;
+    const fillWidth = e.offsetX - manualCleanState.x;
+    const fillHeight = e.offsetY - manualCleanState.y;
     if (manualCleanState.delete)
         maskContext.fillRect(x, y, fillWidth, fillHeight);
     else

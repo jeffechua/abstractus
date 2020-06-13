@@ -92,14 +92,24 @@
             <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
             <canvas id="reduce-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>
             <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:5"></canvas>
-            <input type="text" style="position:absolute; z-index: 6; width:30" id="x-min-input"
-                onchange="setOutputBounds(this, 0);">
-            <input type="text" style="position:absolute; z-index: 6; width:30" id="x-max-input"
-                onchange="setOutputBounds(this, 1);">
-            <input type="text" style="position:absolute; z-index: 6; width:30" id="y-min-input"
-                onchange="setOutputBounds(this, 2);">
-            <input type="text" style="position:absolute; z-index: 6; width:30" id="y-max-input"
-                onchange="setOutputBounds(this, 3);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="x-min-input" value="0"
+                onchange="setExportBounds(this, 0);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="x-max-input" value="1"
+                onchange="setExportBounds(this, 1);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="y-min-input" value="0"
+                onchange="setExportBounds(this, 2);">
+            <input type="text" style="position:absolute; z-index: 6; width:30" id="y-max-input" value="1"
+                onchange="setExportBounds(this, 3);">
+        </div>
+    </p>
+    <hr />
+    <p>
+        <h3>Export <button id="export-toggle" onclick="toggleSection(SECTION.EXPORT);">Show</button>
+            <table id="downloads-table">
+            </table>
+        </h3>
+        <div id="export-div" style="display:none;position:relative">
+            <canvas id="export-canvas" style="position:absolute; left:0; top:0"></canvas>
         </div>
     </p>
 </body>
@@ -111,7 +121,7 @@
 <script src="clean.js"></script>
 <script src="reduction-classes.js"></script>
 <script src="Reduction.js"></script>
-<script src="output.js"></script>
+<script src="export.js"></script>
 <script src="finalize.js"></script>
 
 </html>
