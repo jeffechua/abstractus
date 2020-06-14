@@ -23,6 +23,7 @@ function recomputeReduction() {
         for (let v = 0; v < Reduction.vSize; v++) {
             if (Reduction.isFreshBlack(u, v)) {
                 let fragment = new Fragment(u, v);
+                if (fragment.size >= reduceParams.minFragmentSize && fragment.head.u - fragment.tail.u > 3)
                     fragments.push(fragment);
             }
         }
@@ -114,10 +115,10 @@ class Reduction {
         this.vLower = this.axis ? t : l;
         this.largeCoord = this.axis ?
             function (u, v) {
-                return ((u + this.uLower) + (v + this.vLower) * w) * 4;
+                return ((u + Reduction.uLower) + (v + Reduction.vLower) * w) * 4;
             } :
             function (u, v) {
-                return ((v + this.vLower) + (u + this.uLower) * w) * 4;
+                return ((v + Reduction.vLower) + (u + Reduction.uLower) * w) * 4;
             };
         this.smallCoord = this.axis ?
             function (u, v) {
@@ -128,17 +129,17 @@ class Reduction {
             };
     }
     static isBlack(u, v) {             // post-bwify, pre-degridding
-        return bwBitmap[this.largeCoord(u, v)] == 0;
+        return bwBitmap[Reduction.largeCoord(u, v)] == 0;
     }
     static getTrueBlackness(u, v) {    // pre-bwify blackness number
-        const coord = this.largeCoord(u, v);
+        const coord = Reduction.largeCoord(u, v);
         return 765 - rotatedBitmap[coord] - rotatedBitmap[coord + 1] - rotatedBitmap[coord + 2];
     }
     static isFreshBlack(u, v) {        // getter for the flood-fill fragment finding algorithm
-        const coord = this.smallCoord(u, v);
+        const coord = Reduction.smallCoord(u, v);
         return cleanedBitmap[coord] == 0;
     }
     static rot(u, v) {                 // setter for the flood-fill fragment finding algorithm
-        cleanedBitmap[this.smallCoord(u, v)] = 255;
+        cleanedBitmap[Reduction.smallCoord(u, v)] = 255;
     }
 }

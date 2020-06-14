@@ -145,7 +145,7 @@ class Curve {
         const v2 = offer.tail.v;
         for (let u = u1 + 1; u <= u2 - 1; u++) {
             const v = Math.round(v1 + (v2 - v1) * (u - u1) / (u2 - u1));
-            if (!(Reduction.isBlack(u, v) || Reduction.isBlack(u, v+1) || Reduction.isBlack(u, v-1)))
+            if (!(Reduction.isBlack(u, v) || Reduction.isBlack(u, v + 1) || Reduction.isBlack(u, v - 1)))
                 return false;
         }
         return true;
@@ -171,25 +171,27 @@ class Curve {
 }
 
 class ExportCurve {
-    constructor(curve) {
+    constructor(curve, mode, interval) {
         this.data = [];
+        this._mode = mode;
+        this.mode = mode == EXPORTMODE.DEFAULT ? exportParams.defaultMode : mode;
+        this._interval = interval;
+        this.interval = interval == -1 ? exportParams.defaultInterval : interval;
         this.color = curve.color;
-        this.mode = exportParams.mode;
-        this.interval = exportParams.interval;
         for (let i = 0; i < curve.fragments.length; i++) {
             let last = 0;
             for (let j = 0; j < curve.fragments[i].data.length; j++) {
                 switch (this.mode) {
-                    case "all":
+                    case EXPORTMODE.ALL:
                         break;
-                    case "fixed interval":
-                        if (j % this.interval != 0)
+                    case EXPORTMODE.FIXED_INTERVAL:
+                        if (j % this.interval != 0 && j != curve.fragments[i].data.length - 1)
                             continue;
                         break;
-                    case "fixed distance":
+                    case EXPORTMODE.FIXED_DISTANCE:
                         const du = j - last;
                         const dv = curve.fragments[i].data[j] - curve.fragments[i].data[last];
-                        if (du * du + dv * dv < this.interval * this.interval)
+                        if (du * du + dv * dv < this.interval * this.interval && j != 0 && j != curve.fragments[i].data.length)
                             continue;
                         last = j;
                         break;
@@ -202,12 +204,11 @@ class ExportCurve {
                 });
             }
         }
-        this.downloadLink = this.generateDownloadLink();        
     }
 
     generateDownloadLink() {
         let contents = "x,y";
-        for(let i = 0; i < this.data.length; i++){
+        for (let i = 0; i < this.data.length; i++) {
             contents += "\n" + exportParams.exportX(this.data[i].x) + "," + exportParams.exportY(this.data[i].y);
         }
         return "data:text/plain;charset=utf-8," + encodeURIComponent(contents);
@@ -216,9 +217,11 @@ class ExportCurve {
     draw() {
         exportContext.strokeStyle = this.color;
         exportContext.beginPath();
-        exportContext.moveTo(this.data[0].x + exportDrawing.l, this.data[0].y + exportDrawing.t);
+        exportContext.moveTo(this.data[0].x + exportDrawing.l + 0.5, this.data[0].y + exportDrawing.t + 0.5);
+        if (this.mode != EXPORTMODE.ALL) exportContext.fillRect(this.data[0].x + exportDrawing.l - 1, this.data[0].y + exportDrawing.t - 1, 3, 3);
         for (let i = 1; i < this.data.length; i++) {
-            exportContext.lineTo(this.data[i].x + exportDrawing.l, this.data[i].y + exportDrawing.t);
+            exportContext.lineTo(this.data[i].x + exportDrawing.l + 0.5, this.data[i].y + exportDrawing.t + 0.5);
+            if (this.mode != EXPORTMODE.ALL) exportContext.fillRect(this.data[i].x + exportDrawing.l - 1, this.data[i].y + exportDrawing.t - 1, 3, 3);
         }
         exportContext.stroke();
         return this;
