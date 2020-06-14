@@ -191,7 +191,7 @@ class ExportCurve {
                     case EXPORTMODE.FIXED_DISTANCE:
                         const du = j - last;
                         const dv = curve.fragments[i].data[j] - curve.fragments[i].data[last];
-                        if (du * du + dv * dv < this.interval * this.interval && j != 0 && j != curve.fragments[i].data.length)
+                        if (du * du + dv * dv < this.interval * this.interval && j != 0 && j != curve.fragments[i].data.length - 1)
                             continue;
                         last = j;
                         break;
