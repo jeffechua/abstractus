@@ -1,13 +1,17 @@
 
 putAtAbsolutePosition(canvases[CANVAS.POSTCROP], sectionDivs[SECTION.FINALIZE], 0, 0, -1, -1, 1);
-const frameCanvas = document.getElementById("clean-frame-canvas");
+const frameCanvas = document.getElementById("clean-frame-canvas"); // The peripheral cosmetic frame with the axes and labels
 const frameContext = frameCanvas.getContext("2d");
-const maskCanvas = document.getElementById("clean-mask-canvas");
+const maskCanvas = document.getElementById("clean-mask-canvas");   // The mask to indicate which areas have been cleaned (deleted)
 const maskContext = maskCanvas.getContext("2d");
-const cleanUICanvas = document.getElementById("clean-ui-canvas");
-const cleanUIContext = cleanUICanvas.getContext("2d");
-const reduceCanvas = document.getElementById("reduce-canvas");
+const reduceCanvas = document.getElementById("reduce-canvas");     // The layer where the computed curves are shown
 const reduceContext = reduceCanvas.getContext("2d");
+const cleanUICanvas = document.getElementById("clean-ui-canvas");  // The layer where the UI box for cleaning is shown
+const cleanUIContext = cleanUICanvas.getContext("2d");
+const curveTempCanvas = document.getElementById("curve-temp-canvas");   // The layer where real-time curve editing UI lines are drawn
+const curveTempContext = curveTempCanvas.getContext("2d");
+const curvePermaCanvas = document.getElementById("curve-perma-canvas"); // The layer where nodes and existing connections are shown
+const curvePermaContext = curvePermaCanvas.getContext("2d");
 
 const xMinInput = document.getElementById("x-min-input");
 const xMaxInput = document.getElementById("x-max-input");
@@ -18,6 +22,11 @@ cleanUICanvas.addEventListener("mousedown", cleanDrawStart);
 cleanUICanvas.addEventListener("mousemove", cleanDrawMove);
 cleanUICanvas.addEventListener("mouseup", cleanDrawStop);
 cleanUICanvas.addEventListener("mouseleave", cleanDrawStop);
+
+curvePermaCanvas.addEventListener("mousedown", curveMouseDown);
+curvePermaCanvas.addEventListener("mousemove", curveMouseMove);
+curvePermaCanvas.addEventListener("mouseup", curveMouseUp);
+curvePermaCanvas.addEventListener("mouseleave", curveMouseLeave);
 
 // Arrays over w2 and h2 respectively, 0=false where there is no gridline and 1=true where there is
 let xGridLookup;
@@ -76,8 +85,10 @@ function generateFinalizeUI() {
     sectionDivs[SECTION.FINALIZE].style.height = h;
     frameCanvas.width = w; frameCanvas.height = h;
     maskCanvas.width = w2; maskCanvas.height = h2;
-    cleanUICanvas.width = w; cleanUICanvas.height = h;
     reduceCanvas.width = w2; reduceCanvas.height = h2;
+    cleanUICanvas.width = w; cleanUICanvas.height = h;
+    curveTempCanvas.width = w; curveTempCanvas.height = h;
+    curvePermaCanvas.width = w; curvePermaCanvas.height = h;
     // Position things that require it
     maskCanvas.style.left = l; maskCanvas.style.top = t;
     reduceCanvas.style.left = l; reduceCanvas.style.top = t;
@@ -106,4 +117,18 @@ function uvSwitch(button) {
     }
     Reduction.establish();
     autoClean();
+}
+
+const curveEditToggle = document.getElementById("curve-edit-toggle");
+curveEditToggleChanged();
+function curveEditToggleChanged() {
+    if(curveEditToggle.checked) {
+        canvases[CANVAS.POSTCROP].style.display = "none";
+        curvePermaCanvas.style.display = "block";
+        curveTempCanvas.style.display = "block";
+    } else {
+        canvases[CANVAS.POSTCROP].style.display = "block";
+        curvePermaCanvas.style.display = "none";
+        curveTempCanvas.style.display = "none";
+    }
 }

@@ -84,7 +84,11 @@
             <table>
                 <tr>
                     <td>Independent variable:</td>
-                    <td><button id="uv-switch" onclick="uvSwitch(this);">x</button></td><br />
+                    <td><button id="uv-switch" onclick="uvSwitch(this);">x</button></td>
+                </tr>
+                <tr>
+                    <td>Curve editing mode:</td>
+                    <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();"></td>
                 </tr>
             </table>
         </h3>
@@ -93,6 +97,8 @@
             <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
             <canvas id="reduce-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>
             <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:5"></canvas>
+            <canvas id="curve-temp-canvas" style="position:absolute; left:0; top:0; z-index:6"></canvas>
+            <canvas id="curve-perma-canvas" style="position:absolute; left:0; top:0; z-index:7"></canvas>
             <input type="text" style="position:absolute; z-index: 6; width:30" id="x-min-input" value="0"
                 onchange="setExportBounds(this, 0);">
             <input type="text" style="position:absolute; z-index: 6; width:30" id="x-max-input" value="1"
@@ -122,6 +128,7 @@
 <script src="clean.js"></script>
 <script src="reduction-classes.js"></script>
 <script src="reduction.js"></script>
+<script src="curve-editor.js"></script>
 <script src="export.js"></script>
 <script src="finalize.js"></script>
 

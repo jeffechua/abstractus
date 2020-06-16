@@ -11,16 +11,22 @@ function autoClean(e) {
             if (Reduction.isBlack(u, lv)) {
                 let v = lv;
                 while (Reduction.isBlack(u, v - 1)) v--;
-                maskContext.fillRect(u, v, 1, lv - v + 1);
+                const x = Reduction.axis ? u : v; const y = Reduction.axis ? v : u;
+                const width = Reduction.axis ? 1 : lv - v + 1;
+                const height = Reduction.axis ? lv - v + 1 : 1;
+                maskContext.fillRect(x, y, width, height);
             }
             if (Reduction.isBlack(u, uv)) {
                 let v = uv;
                 while (Reduction.isBlack(u, v + 1)) v++;
-                maskContext.fillRect(u, uv, 1, v - uv + 1);
+                const x = Reduction.axis ? u : uv; const y = Reduction.axis ? uv : u;
+                const width = Reduction.axis ? 1 : v - uv + 1;
+                const height = Reduction.axis ? v - uv + 1 : 1;
+                maskContext.fillRect(x, y, width, height);
             }
         }
     }
-    recomputeReduction();
+    recomputeFragments();
 }
 
 // Manual cleaning
@@ -51,7 +57,7 @@ function cleanDrawStop(e) {
     else
         maskContext.clearRect(x, y, fillWidth, fillHeight);;
     manualCleanState.drawing = false;
-    recomputeReduction();
+    recomputeFragments();
 }
 
 document.addEventListener("keydown", function (e) {

@@ -1,5 +1,8 @@
 
 class Fragment {
+
+    get fragments() { return [this]; }
+
     constructor(u0, v0) {
         this.data = [];
         this.size = 0;
@@ -117,13 +120,16 @@ class Curve {
     constructor(first) {
         this.tail = first.tail;
         this.head = first.head;
-        this.fragments = [first];
+        this.fragments = [];
+        for(let i = 0; i < first.fragments.length; i++)
+            this.fragments.push(first.fragments[i]);
         this.color = Curve.colors[Curve.c % Curve.colors.length];
         Curve.c++;
     }
 
     push(fragment) {
-        this.fragments.push(fragment);
+        for(let i = 0; i < fragment.fragments.length; i++)
+            this.fragments.push(fragment.fragments[i]);
         this.head = fragment.head;
     }
 
@@ -216,6 +222,7 @@ class ExportCurve {
 
     draw() {
         exportContext.strokeStyle = this.color;
+        exportContext.fillStyle = this.color;
         exportContext.beginPath();
         exportContext.moveTo(this.data[0].x + exportDrawing.l + 0.5, this.data[0].y + exportDrawing.t + 0.5);
         if (this.mode != EXPORTMODE.ALL) exportContext.fillRect(this.data[0].x + exportDrawing.l - 1, this.data[0].y + exportDrawing.t - 1, 3, 3);

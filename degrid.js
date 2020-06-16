@@ -182,6 +182,7 @@ function rerenderDegrid() {
             yGridLines[i].erase();
         }
     }
+    degridGuideContext.stroke();
 
     setupFinalize();
 }
