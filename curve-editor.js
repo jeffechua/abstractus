@@ -148,7 +148,6 @@ function curveMouseMove(e) {
 }
 
 function curveMouseUp(e) {
-    console.log(curveUIState);
     if (curveUIState.state == CURVEUISTATE.CUTTING && curveUIState.intercepting.length > 0) {
         connections = connections.filter((connection) => !curveUIState.intercepting.includes(connection));
         rebuildCurves();

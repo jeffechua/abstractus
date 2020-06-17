@@ -19,10 +19,10 @@ const yMinInput = document.getElementById("y-min-input");
 const yMaxInput = document.getElementById("y-max-input");
 exportParams.bounds = [xMinInput.value, xMaxInput.value, yMinInput.value, yMaxInput.value];
 
-cleanUICanvas.addEventListener("mousedown", cleanDrawStart);
-cleanUICanvas.addEventListener("mousemove", cleanDrawMove);
-cleanUICanvas.addEventListener("mouseup", cleanDrawStop);
-cleanUICanvas.addEventListener("mouseleave", cleanDrawStop);
+cleanUICanvas.addEventListener("mousedown", cleanMouseDown);
+cleanUICanvas.addEventListener("mousemove", cleanMouseMove);
+cleanUICanvas.addEventListener("mouseup", cleanMouseUp);
+cleanUICanvas.addEventListener("mouseleave", cleanMouseUp);
 
 curvePermaCanvas.addEventListener("mousedown", curveMouseDown);
 curvePermaCanvas.addEventListener("mousemove", curveMouseMove);

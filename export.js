@@ -45,9 +45,21 @@ function setExportBounds(input, target) {
     input.blur();
 }
 
+function resetAxes() {
+    exportParams.bounds = [0, 1, 0, 1];
+    xMinInput.value = 0;
+    xMaxInput.value = 1;
+    yMinInput.value = 0;
+    yMaxInput.value = 1;
+    if (progress >= SECTION.EXPORT)
+        recomputeExport();
+}
+
 let exportCurves;
 
 function recomputeExport() {
+
+    progress = SECTION.EXPORT;
 
     exportCanvas.width = w2 + 1 + exportDrawing.leftMargin;
     exportCanvas.height = h2 + 1 + exportDrawing.bottomMargin;
@@ -75,10 +87,12 @@ function recomputeExport() {
 
     let callbacks = [];
 
+    const nRows = exportCurves.length > 5 ? Math.ceil(exportCurves.length / 2) : exportCurves.length;
+    for (let i = 0; i < nRows; i++) downloadsTable.insertRow();
 
     // Individual controls
     for (let i = 0; i < exportCurves.length; i++) {
-        const row = downloadsTable.insertRow();
+        const row = downloadsTable.rows[i % nRows + 1];
         let cell;
 
         const labelText = document.createElement("span");
@@ -129,7 +143,7 @@ function recomputeExport() {
                 downloadButton.href = exportCurves[i].generateDownloadLink();
             }
         });
-        
+
         updateModeUI(exportCurves[i]._mode, modeSelect, intervalNumber, intervalSlider);
         updateIntervalUI(exportCurves[i]._interval, intervalNumber, intervalSlider);
 
@@ -170,9 +184,10 @@ function createModeDropdown() {
     const dist = document.createElement("option");
     select.selectedIndex = exportParams.defaultMode;
     all.value = EXPORTMODE.ALL; all.innerText = "All data";
-    intvl.value = EXPORTMODE.FIXED_INTERVAL; intvl.innerText = "Fixed x intervals";
-    dist.value = EXPORTMODE.FIXED_DISTANCE; dist.innerText = "Fixed 2D distances";
+    intvl.value = EXPORTMODE.FIXED_INTERVAL; intvl.innerText = "Fixed intervals";
+    dist.value = EXPORTMODE.FIXED_DISTANCE; dist.innerText = "Fixed distances";
     select.add(all); select.add(intvl); select.add(dist);
+    select.style.width = "120px";
     return select;
 }
 
@@ -186,9 +201,9 @@ function updateModeUI(_mode, select, number, slider) {
         number.style.display = "none";
         slider.style.display = "none";
     }
-    if(_mode == EXPORTMODE.DEFAULT)
+    if (_mode == EXPORTMODE.DEFAULT)
         select.style.fontWeight = "normal";
-    else 
+    else
         select.style.fontWeight = "bold";
 }
 
@@ -197,8 +212,8 @@ function createIntervalControls() {
     const intervalSlider = document.createElement("input");
     intervalNumber.type = "number"; intervalNumber.style.width = "50px";
     intervalNumber.min = 1; intervalNumber.max = Infinity; intervalNumber.value = exportParams.defaultInterval; intervalNumber.step = 1;
-    intervalSlider.type = "range"; intervalNumber.class = "slider";
-    intervalSlider.min = 1; intervalSlider.max = Math.round(Math.max(w2, h2) / 3); intervalSlider.value = exportParams.defaultInterval; intervalSlider.step = 1;
+    intervalSlider.type = "range"; intervalNumber.class = "slider"; intervalSlider.style.width = "70px";
+    intervalSlider.min = 1; intervalSlider.max = Math.round(Math.max(w2, h2) / 10); intervalSlider.value = exportParams.defaultInterval; intervalSlider.step = 1;
     intervalNumber.style.display = exportParams.defaultMode == EXPORTMODE.ALL ? "none" : "block";
     intervalSlider.style.display = exportParams.defaultMode == EXPORTMODE.ALL ? "none" : "block";
     return [intervalNumber, intervalSlider];
@@ -208,9 +223,9 @@ function updateIntervalUI(_interval, number, slider) {
     const interval = _interval == -1 ? exportParams.defaultInterval : _interval;
     number.value = interval; // we've indirectly parsed -1s by going through exportCurves[i].
     slider.value = interval;
-    if(_interval == -1)
+    if (_interval == -1)
         number.style.fontWeight = "normal";
-    else 
+    else
         number.style.fontWeight = "bold";
 }
 

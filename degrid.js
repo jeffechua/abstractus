@@ -52,8 +52,8 @@ class GridLine {
         if (this.vertical) {
             contexts[CANVAS.DEGRIDDED].clearRect(this.llower, 0, span, h);
             contexts[CANVAS.DEGRIDDED].fillRect(this.llower, 0, span, h);
-        }else{                                                             
-            contexts[CANVAS.DEGRIDDED].clearRect(0, this.llower, w, span); 
+        } else {
+            contexts[CANVAS.DEGRIDDED].clearRect(0, this.llower, w, span);
             contexts[CANVAS.DEGRIDDED].fillRect(0, this.llower, w, span);
         }
     }
@@ -164,8 +164,8 @@ function rerenderDegrid() {
         if (xGridLines[i].active) {
             // Guide on underlying canvas
             let center = xGridLines[i].center;
-            degridGuideContext.moveTo(center+0.5,0.5);
-            degridGuideContext.lineTo(center+0.5,h-0.5);
+            degridGuideContext.moveTo(center + 0.5, 0.5);
+            degridGuideContext.lineTo(center + 0.5, h - 0.5);
             // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
             if (xGridLines[i].active) xGridLines[i].erase();
         }
@@ -176,8 +176,8 @@ function rerenderDegrid() {
         if (yGridLines[i].active) {
             // Guide on underlying canvas
             let center = yGridLines[i].center;
-            degridGuideContext.moveTo(0.5,center+0.5);
-            degridGuideContext.lineTo(w-0.5, center+0.5);
+            degridGuideContext.moveTo(0.5, center + 0.5);
+            degridGuideContext.lineTo(w - 0.5, center + 0.5);
             // Gap on masking canvas (canvas[CANVAS.DEGRIDDED])
             yGridLines[i].erase();
         }
@@ -239,7 +239,10 @@ function createEditWidget(gridLine) {
 
 const degridDetectionSlider = document.getElementById("degrid-detection-slider");
 const degridDetectionNumber = document.getElementById("degrid-detection-number");
-degridParams.detectionThreshold  = degridDetectionNumber.value / 100;
+if (degridDetectionNumber.value == "")
+    degridDetectionNumber.value = defaultDegridParams.detectionThreshold * 100;
+else
+    degridParams.detectionThreshold = degridDetectionNumber.value / 100;
 function setDegridDetectionThreshold(percentage) {
     degridParams.detectionThreshold = percentage / 100;
     degridDetectionSlider.value = percentage;
@@ -250,7 +253,10 @@ function setDegridDetectionThreshold(percentage) {
 
 const degridSlopeSlider = document.getElementById("degrid-slope-slider");
 const degridSlopeNumber = document.getElementById("degrid-slope-number");
-degridParams.slopeThreshold = degridSlopeNumber.value / 100;
+if (degridSlopeNumber.value == "")
+    degridSlopeNumber.value = defaultDegridParams.slopeThreshold * 100;
+else
+    degridParams.slopeThreshold = degridSlopeNumber.value / 100;
 function setDegridSlopeThreshold(percentage) {
     // This could also be optimized similar to only partially recompute, but
     // it would take effort and I'm lazy.
@@ -262,7 +268,10 @@ function setDegridSlopeThreshold(percentage) {
 }
 
 const degridDefMarginNumber = document.getElementById("degrid-defmargin-number");
-degridParams.defaultMargin = parseInt(degridDefMarginNumber.value);
+if (degridDefMarginNumber.value == "")
+    degridDefMarginNumber.value = defaultDegridParams.defaultMargin;
+else
+    degridParams.defaultMargin = parseInt(degridDefMarginNumber.value);
 function setDegridDefaultMargin(value) {
     degridParams.defaultMargin = parseInt(value);
     degridDefMarginNumber.value = value;

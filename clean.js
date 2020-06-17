@@ -1,6 +1,6 @@
 // Autoclean
 
-function autoClean(e) {
+function autoClean() {
     maskContext.clearRect(0, 0, w2, h2);
     for (let i = 0; i < Reduction.vGridLines.length; i++) {
         const lv = Reduction.vGridLines[i].llower - 1 - Reduction.vLower; // immediate up of grid line
@@ -31,20 +31,47 @@ function autoClean(e) {
 
 // Manual cleaning
 
-function cleanDrawStart(e) {
-    manualCleanState.drawing = true;
-    manualCleanState.x = e.offsetX;
-    manualCleanState.y = e.offsetY;
-    manualCleanState.delete = !e.shiftKey;
-    cleanUIContext.strokeStyle = manualCleanState.delete ? "red" : "green";
+function cleanMouseDown(e) {
+    if (e.altKey) {
+        const maskData = maskContext.getImageData(0, 0, w2, h2).data;
+        const dgddData = contexts[CANVAS.POSTCROP].getImageData(0, 0, w2, h2).data;
+        // delete fragment
+        const seed = {
+            x: Math.round(e.offsetX - 0.5) - l,
+            y: Math.round(e.offsetY - 0.5) - t
+        };
+        const live = [seed];
+        while (live.length > 0) {
+            const p = live.pop();
+            maskData[(p.x + p.y * w2) * 4 + 3] = 255;
+            maskContext.fillRect(p.x, p.y, 1, 1);
+            process = (x, y) => {
+                if (maskData[(x + y * w2) * 4 + 3] == 0 && dgddData[(x + y * w2) * 4] == 0) {
+                    const newPx = { x: x, y: y };
+                    live.push(newPx);
+                }
+            }
+            process(p.x + 1, p.y);
+            process(p.x - 1, p.y);
+            process(p.x, p.y + 1);
+            process(p.x, p.y - 1);
+        }
+        recomputeFragments();
+    } else {
+        manualCleanState.drawing = true;
+        manualCleanState.x = e.offsetX;
+        manualCleanState.y = e.offsetY;
+        manualCleanState.delete = !e.shiftKey;
+        cleanUIContext.strokeStyle = manualCleanState.delete ? "red" : "green";
+    }
 }
-function cleanDrawMove(e) {
+function cleanMouseMove(e) {
     if (!manualCleanState.drawing)
         return;
     cleanUIContext.clearRect(0, 0, w, h);
     cleanUIContext.strokeRect(manualCleanState.x, manualCleanState.y, e.offsetX - manualCleanState.x + 1, e.offsetY - manualCleanState.y + 1);
 }
-function cleanDrawStop(e) {
+function cleanMouseUp(e) {
     if (!manualCleanState.drawing)
         return;
     cleanUIContext.clearRect(0, 0, w, h);

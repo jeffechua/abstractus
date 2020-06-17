@@ -12,7 +12,7 @@
     </p>
     <hr />
     <div style="display:flex; flex-direction:row">
-        <div>
+        <div style="border-right: 1px solid black">
             <p>
                 <h3>Rotation correction <button id="rotation-toggle"
                         onclick="toggleSection(SECTION.ROTATION);">Show</button>
@@ -85,19 +85,34 @@
             <hr />
             <p>
                 <h3>Finalize <button id="finalize-toggle" onclick="toggleSection(SECTION.FINALIZE);">Show</button>
-                    <table>
-                        <tr>
-                            <td>Independent variable:</td>
-                            <td><select id="uv-select" onchange="uvSelectChanged()">
-                                    <option value="true">x</option>
-                                    <option value="false">y</option>
-                                </select></td>
-                        </tr>
-                        <tr>
-                            <td>Curve editing mode:</td>
-                            <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();"></td>
-                        </tr>
-                    </table>
+                    <div style="display:flex; flex-direction:row">
+                        <table>
+                            <tr>
+                                <td>Independent variable:</td>
+                                <td><select id="uv-select" onchange="uvSelectChanged()">
+                                        <option value="true">x</option>
+                                        <option value="false">y</option>
+                                    </select></td>
+                            </tr>
+                            <tr>
+                                <td>Curve editing mode:</td>
+                                <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();">
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="flex-grow:1"></div>
+                        <table>
+                            <tr>
+                                <td>Reset:</td>
+                                <td><button onclick="if(progress>=SECTION.EXPORT) autoClean();">Deletions</button></td>
+                                <td><button onclick="resetAxes();">Axes</button>
+                                </td>
+                                <td><button
+                                        onclick="connections = []; if(progress>=SECTION.EXPORT) rebuildCurves();">Curves</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 </h3>
                 <div id="finalize-div" style="display:none; position:relative">
                     <canvas id="clean-mask-canvas"
