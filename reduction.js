@@ -38,7 +38,7 @@ function recomputeFragments() {
 }
 
 function rebuildCurves() {
-    
+
     reduceContext.clearRect(0, 0, w2, h2);
 
     // This algorithm starts at the end of the array (furthest +u) and works backwards,
@@ -90,13 +90,15 @@ function buildCurveFromFragment(fragment, color) {
     let crv = new Curve(workingPieces[i]);
     workingPieces.splice(i, 1);
     while (i < workingPieces.length) {
+        if(crv.head.sealed)
+            break;
         const refDistance = workingPieces[i].tail.u - crv.head.u;
         if (refDistance <= 0) { // move i forward until we start finding workingPieces that are in front of
             i++;                // instead of behind the curve
             continue;
         }
         const peValid = (v) => v / (workingPieces[i].tail.u - crv.head.u) < reduceParams.maxProjectedErrorFactor * 2;
-        if (!peValid(crv.tryPE(workingPieces[i])) || !crv.testConnectionIsBlocked(workingPieces[i])) {
+        if (!peValid(crv.tryPE(workingPieces[i])) || !crv.testConnectionIsBlocked(workingPieces[i]) || workingPieces[i].tail.sealed) {
             i++;     // eliminate outright candidates with too awful PEs.
             continue;// and those with a gap that isn't masked, grid-obscured, or an ignored fragment
         }
@@ -107,11 +109,13 @@ function buildCurveFromFragment(fragment, color) {
         for (let j = i; j < workingPieces.length && workingPieces[j].tail.u <= workingPieces[i].head.u; j++) {
             const d2vd2u = crv.tryD2vdu2(workingPieces[j]);
             const pe = crv.tryPE(workingPieces[j]);
-            if (!peValid(pe) || !crv.testConnectionIsBlocked(workingPieces[j])) continue; // eliminate too awful PEs and unjustified gaps
+            if (!peValid(pe) || !crv.testConnectionIsBlocked(workingPieces[j]) || workingPieces[j].tail.sealed) continue; // eliminate too awful PEs and unjustified gaps
             if (d2vd2u < minD2v) minD2v = d2vd2u;
             if (pe < minPE) minPE = pe;
             candidates.push({ index: j, d2vdu2: d2vd2u, pe: pe });
         }
+        if(candidates.length == 0)
+            break;
         // Then we find the ones with the least d2v2u (change in slope) and projection error (offset in v).
         i = candidates.reduce((f1, f2) => {
             f1Error = f1.d2vdu2 / minD2v + f1.pe / minPE;

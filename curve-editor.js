@@ -6,10 +6,10 @@ class Connection {
     constructor(i1, i2) {
         this.i1 = i1;
         this.i2 = i2;
-        this.x1 = Reduction.getX(fragments[i1].head) + l;
-        this.y1 = Reduction.getY(fragments[i1].head) + t;
-        this.x2 = Reduction.getX(fragments[i2].tail) + l;
-        this.y2 = Reduction.getY(fragments[i2].tail) + t;
+        this.x1 = Reduction.getX(fragments[i1].head) + l + 0.5; // these are in canvas space, hence the half-pixel
+        this.y1 = Reduction.getY(fragments[i1].head) + t + 0.5;
+        this.x2 = Reduction.getX(fragments[i2].tail) + l + 0.5;
+        this.y2 = Reduction.getY(fragments[i2].tail) + t + 0.5;
         this.slope = (this.y2 - this.y1) / (this.x2 - this.x1);
         this.intercept = this.y1 - this.x1 * this.slope;
     }
@@ -32,28 +32,41 @@ const curveEditParams = {
 
 function redrawCurveEditor() {
     curvePermaContext.clearRect(0, 0, w, h);
+    curveTempContext.clearRect(0, 0, w, h);
     nodes = [];
     for (let i = 0; i < fragments.length; i++) {
         // Only create nodes for connectionless fragment ends
         if (!connections.includes((connection) => connection.i1 == i)) {
-            let x = Reduction.getX(fragments[i].head) + l;
-            let y = Reduction.getY(fragments[i].head) + t;
-            curvePermaContext.fillRect(x - curveEditParams.nodeRadius + 0.5, y - curveEditParams.nodeRadius + 0.5,
+            let x = Math.round(Reduction.getX(fragments[i].head) + l) + 0.5; // in canvase space, hence the +0.5
+            let y = Math.round(Reduction.getY(fragments[i].head) + t) + 0.5;
+            curvePermaContext.fillRect(x - curveEditParams.nodeRadius, y - curveEditParams.nodeRadius,
                 curveEditParams.nodeRadius * 2, curveEditParams.nodeRadius * 2);
-            nodes.push({ x: x + 0.5, y: y + 0.5, i: i, isHead: true });
+            if (fragments[i].head.sealed) {
+                curvePermaContext.fillStyle = "white";
+                curvePermaContext.fillRect(x - curveEditParams.nodeRadius + 1, y - curveEditParams.nodeRadius + 1,
+                    curveEditParams.nodeRadius * 2 - 2, curveEditParams.nodeRadius * 2 - 2);
+                curvePermaContext.fillStyle = "black";
+            }
+            nodes.push({ x: x, y: y, i: i, isHead: true });
         }
         if (!connections.includes((connection) => connection.i2 == i)) {
-            x = Reduction.getX(fragments[i].tail) + l;
-            y = Reduction.getY(fragments[i].tail) + t;
-            curvePermaContext.fillRect(x - curveEditParams.nodeRadius + 0.5, y - curveEditParams.nodeRadius + 0.5,
+            let x = Math.round(Reduction.getX(fragments[i].tail) + l) + 0.5;
+            let y = Math.round(Reduction.getY(fragments[i].tail) + t) + 0.5;
+            curvePermaContext.fillRect(x - curveEditParams.nodeRadius, y - curveEditParams.nodeRadius,
                 curveEditParams.nodeRadius * 2, curveEditParams.nodeRadius * 2);
-            nodes.push({ x: x + 0.5, y: y + 0.5, i: i, isHead: false });
+            if (fragments[i].tail.sealed) {
+                curvePermaContext.fillStyle = "white";
+                curvePermaContext.fillRect(x - curveEditParams.nodeRadius + 1, y - curveEditParams.nodeRadius + 1,
+                    curveEditParams.nodeRadius * 2 - 2, curveEditParams.nodeRadius * 2 - 2);
+                curvePermaContext.fillStyle = "black";
+            }
+            nodes.push({ x: x, y: y, i: i, isHead: false });
         }
     }
     curvePermaContext.beginPath();
     for (let i = 0; i < connections.length; i++) {
-        curvePermaContext.moveTo(connections[i].x1 + 0.5, connections[i].y1 + 0.5);
-        curvePermaContext.lineTo(connections[i].x2 + 0.5, connections[i].y2 + 0.5);
+        curvePermaContext.moveTo(connections[i].x1, connections[i].y1);
+        curvePermaContext.lineTo(connections[i].x2, connections[i].y2);
     }
     curvePermaContext.stroke();
 }
@@ -99,8 +112,8 @@ function curveMouseMove(e) {
             break;
         case CURVEUISTATE.CONNECTING:
             curveTempContext.fillRect(
-                curveUIState.selectedNode.x - curveEditParams.nodeRadius - 0.5,
-                curveUIState.selectedNode.y - curveEditParams.nodeRadius - 0.5,
+                curveUIState.selectedNode.x - curveEditParams.nodeRadius - 1,
+                curveUIState.selectedNode.y - curveEditParams.nodeRadius - 1,
                 curveEditParams.nodeRadius * 2 + 2, curveEditParams.nodeRadius * 2 + 2
             );
             if (hitNode != undefined &&
@@ -121,18 +134,13 @@ function curveMouseMove(e) {
                 curveTempContext.moveTo(curveUIState.selectedNode.x, curveUIState.selectedNode.y);
                 curveTempContext.lineTo(curveUIState.targetNode.x, curveUIState.targetNode.y);
                 curveTempContext.stroke();
-                curveTempContext.fillRect(
-                    curveUIState.targetNode.x - curveEditParams.nodeRadius - 0.5,
-                    curveUIState.targetNode.y - curveEditParams.nodeRadius - 0.5,
-                    curveEditParams.nodeRadius * 2 + 2, curveEditParams.nodeRadius * 2 + 2
-                );
             };
-            // fall through to CURVREUISTATE.NONE for selectedNode highlighting
+        // fall through to CURVREUISTATE.NONE for selectedNode highlighting
         case CURVEUISTATE.NONE:
             if (hitNode != undefined)
                 curveTempContext.fillRect(
-                    hitNode.x - curveEditParams.nodeRadius - 0.5,
-                    hitNode.y - curveEditParams.nodeRadius - 0.5,
+                    hitNode.x - curveEditParams.nodeRadius - 1,
+                    hitNode.y - curveEditParams.nodeRadius - 1,
                     curveEditParams.nodeRadius * 2 + 2, curveEditParams.nodeRadius * 2 + 2
                 );
             break;
@@ -140,6 +148,7 @@ function curveMouseMove(e) {
 }
 
 function curveMouseUp(e) {
+    console.log(curveUIState);
     if (curveUIState.state == CURVEUISTATE.CUTTING && curveUIState.intercepting.length > 0) {
         connections = connections.filter((connection) => !curveUIState.intercepting.includes(connection));
         rebuildCurves();
@@ -150,20 +159,32 @@ function curveMouseUp(e) {
         connections.push(new Connection(head.i, tail.i));
         rebuildCurves();
     }
-    curveTempContext.clearRect(0, 0, w, h);
-    curveUIState.state = CURVEUISTATE.NONE;
+    curveUIState.flush();
 }
 
 function curveMouseLeave(e) {
     curveTempContext.clearRect(0, 0, w, h);
-    curveUIState.state = CURVEUISTATE.NONE;
+    curveUIState.flush();
 }
 
+function curveDoubleClick(e) {
+    let hitNode = nodes.find((node) =>
+        Math.abs(node.x - e.offsetX) <= curveEditParams.nodeRadius &&
+        Math.abs(node.y - e.offsetY) <= curveEditParams.nodeRadius
+    );
+    if (hitNode != undefined) {
+        if (hitNode.isHead)
+            fragments[hitNode.i].head.sealed = !fragments[hitNode.i].head.sealed;
+        else
+            fragments[hitNode.i].tail.sealed = !fragments[hitNode.i].tail.sealed;
+        rebuildCurves();
+    }
+}
 
 document.addEventListener("keydown", function (e) {
     if (e.key == "Escape") {
-        cleanUIContext.clearRect(0, 0, w, h);
-        manualCleanState.drawing = false;
+        curveTempContext.clearRect(0, 0, w, h);
+        curveUIState.flush();
     }
 })
 
@@ -179,5 +200,11 @@ const curveUIState = {
     state: CURVEUISTATE.NONE,
     selectedNode: 0,
     targetNode: 0,
-    intercepting: []
+    intercepting: [],
+    flush: function () {
+        this.selectedNode = undefined;
+        this.targetNode = undefined;
+        this.state = CURVEUISTATE.NONE;
+        this.intercepting = [];
+    }
 }

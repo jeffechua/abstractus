@@ -17,6 +17,7 @@ const xMinInput = document.getElementById("x-min-input");
 const xMaxInput = document.getElementById("x-max-input");
 const yMinInput = document.getElementById("y-min-input");
 const yMaxInput = document.getElementById("y-max-input");
+exportParams.bounds = [xMinInput.value, xMaxInput.value, yMinInput.value, yMaxInput.value];
 
 cleanUICanvas.addEventListener("mousedown", cleanDrawStart);
 cleanUICanvas.addEventListener("mousemove", cleanDrawMove);
@@ -27,6 +28,7 @@ curvePermaCanvas.addEventListener("mousedown", curveMouseDown);
 curvePermaCanvas.addEventListener("mousemove", curveMouseMove);
 curvePermaCanvas.addEventListener("mouseup", curveMouseUp);
 curvePermaCanvas.addEventListener("mouseleave", curveMouseLeave);
+curvePermaCanvas.addEventListener("dblclick", curveDoubleClick);
 
 // Arrays over w2 and h2 respectively, 0=false where there is no gridline and 1=true where there is
 let xGridLookup;
@@ -107,14 +109,10 @@ function generateFinalizeUI() {
     autoClean();
 }
 
-function uvSwitch(button) {
-    if (button.innerText == "x") {
-        button.innerText = "y";
-        Reduction.axis = false;
-    } else {
-        button.innerText = "x";
-        Reduction.axis = true;
-    }
+const uvSelect = document.getElementById("uv-select");
+Reduction.axis = uvSelect.value == "true";
+function uvSelectChanged() {
+    Reduction.axis = uvSelect.value == "true";
     Reduction.establish();
     autoClean();
 }

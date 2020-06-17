@@ -22,6 +22,7 @@ for (let i = 0; i < sectionNames.length; i++) {
     sectionToggles.push(document.getElementById(sectionNames[i] + "-toggle"));
     sectionDivs.push(document.getElementById(sectionNames[i] + "-div"));
 }
+toggleSection(SECTION.FINALIZE);
 
 function toggleSection(i) {
     if (sectionToggles[i].innerText == "Show") {
@@ -85,8 +86,6 @@ function processBitmap(bitmap) {
     for (let i = 0; i < CANVAS.POSTCROP; i++) {
         canvases[i].width = w; canvases[i].height = h;
     }
-
-    toggleSection(SECTION.FINALIZE);
 
     contexts[CANVAS.ORIGINAL].drawImage(bitmap, 0, 0);
     bitmap.close();

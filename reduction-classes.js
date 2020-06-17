@@ -69,12 +69,14 @@ class Fragment {
         this.tail = {
             u: u0,
             v: this.data[0],
-            dvdu: (this.data[d] - this.data[0]) / d
+            dvdu: (this.data[d] - this.data[0]) / d,
+            sealed: false
         };
         this.head = {
             u: u,
             v: this.data[this.data.length - 1],
-            dvdu: (this.data[l - 1] - this.data[l - 1 - d]) / d
+            dvdu: (this.data[l - 1] - this.data[l - 1 - d]) / d,
+            sealed: false
         };
     }
 

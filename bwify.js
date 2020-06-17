@@ -46,8 +46,7 @@ function recomputeBwify() {
 // UI interface to set bwify params
 const bwifySlider = document.getElementById("bwify-thresh-slider");
 const bwifyNumber = document.getElementById("bwify-thresh-number");
-bwifySlider.value = bwifyParams.intensityThreshold;
-bwifyNumber.value = bwifyParams.intensityThreshold;
+bwifyParams.intensityThreshold = bwifyNumber.value;
 function setBwifyIntensityThreshold(value) {
     bwifyParams.intensityThreshold = value;
     bwifySlider.value = value;

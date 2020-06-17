@@ -239,8 +239,7 @@ function createEditWidget(gridLine) {
 
 const degridDetectionSlider = document.getElementById("degrid-detection-slider");
 const degridDetectionNumber = document.getElementById("degrid-detection-number");
-degridDetectionSlider.value = degridParams.detectionThreshold * 100;
-degridDetectionNumber.value = degridParams.detectionThreshold * 100;
+degridParams.detectionThreshold  = degridDetectionNumber.value / 100;
 function setDegridDetectionThreshold(percentage) {
     degridParams.detectionThreshold = percentage / 100;
     degridDetectionSlider.value = percentage;
@@ -251,8 +250,7 @@ function setDegridDetectionThreshold(percentage) {
 
 const degridSlopeSlider = document.getElementById("degrid-slope-slider");
 const degridSlopeNumber = document.getElementById("degrid-slope-number");
-degridSlopeSlider.value = degridParams.slopeThreshold * 100;
-degridSlopeNumber.value = degridParams.slopeThreshold * 100;
+degridParams.slopeThreshold = degridSlopeNumber.value / 100;
 function setDegridSlopeThreshold(percentage) {
     // This could also be optimized similar to only partially recompute, but
     // it would take effort and I'm lazy.
@@ -264,7 +262,7 @@ function setDegridSlopeThreshold(percentage) {
 }
 
 const degridDefMarginNumber = document.getElementById("degrid-defmargin-number");
-degridDefMarginNumber.value = degridParams.defaultMargin;
+degridParams.defaultMargin = parseInt(degridDefMarginNumber.value);
 function setDegridDefaultMargin(value) {
     degridParams.defaultMargin = parseInt(value);
     degridDefMarginNumber.value = value;

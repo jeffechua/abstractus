@@ -244,6 +244,7 @@ function redrawExport() {
     exportContext.strokeStyle = "black";
     exportContext.strokeRect(exportDrawing.l + 0.5, exportDrawing.t + 0.5, w2, h2);
 
+    exportContext.fillStyle = "black";
     writeText(exportParams.bounds[0], exportContext, exportDrawing.l + exportDrawing.textMargin, exportDrawing.b + exportDrawing.textMargin, -1, -1);
     writeText(exportParams.bounds[1], exportContext, exportDrawing.r - exportDrawing.textMargin, exportDrawing.b + exportDrawing.textMargin, +1, -1);
     writeText(exportParams.bounds[2], exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.b - exportDrawing.textMargin, +1, +1);

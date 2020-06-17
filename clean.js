@@ -65,7 +65,7 @@ document.addEventListener("keydown", function (e) {
         cleanUIContext.clearRect(0, 0, w, h);
         manualCleanState.drawing = false;
     }
-})
+});
 
 const manualCleanState = {
     x: 0,
