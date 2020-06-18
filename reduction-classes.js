@@ -123,14 +123,14 @@ class Curve {
         this.tail = first.tail;
         this.head = first.head;
         this.fragments = [];
-        for(let i = 0; i < first.fragments.length; i++)
+        for (let i = 0; i < first.fragments.length; i++)
             this.fragments.push(first.fragments[i]);
         this.color = Curve.colors[Curve.c % Curve.colors.length];
         Curve.c++;
     }
 
     push(fragment) {
-        for(let i = 0; i < fragment.fragments.length; i++)
+        for (let i = 0; i < fragment.fragments.length; i++)
             this.fragments.push(fragment.fragments[i]);
         this.head = fragment.head;
     }
@@ -215,9 +215,9 @@ class ExportCurve {
     }
 
     generateDownloadLink() {
-        let contents = "x,y";
+        let contents = "";
         for (let i = 0; i < this.data.length; i++) {
-            contents += "\n" + exportParams.exportX(this.data[i].x) + "," + exportParams.exportY(this.data[i].y);
+            contents += (i == 0 ? "" : "\n") + exportParams.exportX(this.data[i].x) + "," + exportParams.exportY(this.data[i].y);
         }
         return "data:text/plain;charset=utf-8," + encodeURIComponent(contents);
     }

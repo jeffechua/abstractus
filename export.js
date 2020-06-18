@@ -71,15 +71,23 @@ function recomputeExport() {
     while (downloadsTable.rows.length > 0)
         downloadsTable.deleteRow(0);
 
+    downloadsTable.insertRow().insertCell();
+
     // Global controls
-    const topRow = downloadsTable.insertRow(0);
-    topRow.insertCell(); topRow.insertCell();
+    const topRow = downloadsTable.insertRow();
+    const downloadCell = topRow.insertCell(); downloadCell.colSpan = 2;
+    const downloadAllLink = document.createElement("a");
+    downloadAllLink.text = "Download All";
+    downloadAllLink.href = "javascript:;";
+    downloadCell.appendChild(downloadAllLink);
     const select = createModeDropdown();
-    cell = topRow.insertCell(); cell.appendChild(select);
+    topRow.insertCell().appendChild(select);
     const intervalControls = createIntervalControls();
     const intervalNumber = intervalControls[0]; const intervalSlider = intervalControls[1];
-    const cell1 = topRow.insertCell(); cell1.appendChild(intervalNumber);
-    const cell2 = topRow.insertCell(); cell2.appendChild(intervalSlider);
+    topRow.insertCell().appendChild(intervalNumber);
+    topRow.insertCell().appendChild(intervalSlider);
+
+    downloadsTable.insertRow().insertCell();
 
     select.selectedIndex = exportParams.defaultMode;
     intervalNumber.value = exportParams.defaultInterval;
@@ -92,23 +100,55 @@ function recomputeExport() {
 
     // Individual controls
     for (let i = 0; i < exportCurves.length; i++) {
-        const row = downloadsTable.rows[i % nRows + 1];
-        let cell;
 
+        const row = downloadsTable.rows[i % nRows + 3];
+
+        // Dataset name
+        const nameCell = row.insertCell();
         const labelText = document.createElement("span");
         labelText.style.color = exportCurves[i].color;
         labelText.innerText = "Data " + (i + 1);
-        cell = row.insertCell(); cell.appendChild(labelText);
+        nameCell.appendChild(labelText);
 
-        const downloadButton = document.createElement("a");
-        downloadButton.innerText = "Download";
-        downloadButton.href = exportCurves[i].generateDownloadLink();
-        downloadButton.download = "data_" + (i + 1) + ".csv";
-        cell = row.insertCell(); cell.appendChild(downloadButton);
+        // Download link
+        const downloadLink = document.createElement("a");
+        downloadLink.innerText = "Download";
+        downloadLink.href = exportCurves[i].generateDownloadLink();
+        downloadLink.download = "Data_" + (i + 1) + ".csv";
+        row.insertCell().appendChild(downloadLink);
+
+        // Dataset name editing
+        const nameEdit = document.createElement("input");
+        nameEdit.type = "text";
+        nameEdit.style.width = "100px";
+        nameEdit.value = labelText.innerText;
+        nameEdit.addEventListener("change", () => {
+            if (nameEdit.value == "")
+                return;
+            labelText.innerText = nameEdit.value;
+            downloadLink.download = nameEdit.value.replace(" ", "_") + ".csv";
+            labelText.style.display = "block";
+            nameEdit.style.display = "none";
+        });
+        nameEdit.addEventListener("keydown", (e) => {
+            if(e.key=="Escape") {
+                labelText.style.display = "block";
+                nameEdit.style.display = "none";
+                nameEdit.value = labelText.innerText;
+            }
+        })
+        labelText.addEventListener("dblclick", () => {
+            labelText.style.display = "none";
+            nameEdit.style.display = "block";
+            nameEdit.focus();
+            nameEdit.select();
+        })
+        nameEdit.style.display = "none";
+        nameCell.appendChild(nameEdit);
 
         // Export mode setter
         const modeSelect = createModeDropdown();
-        cell = row.insertCell(); cell.appendChild(modeSelect);
+        row.insertCell().appendChild(modeSelect);
         modeSelect.addEventListener("change", () => {
             exportCurves[i] = new ExportCurve(curves[i], parseInt(modeSelect.value), exportCurves[i]._interval);
             downloadButton.href = exportCurves[i].generateDownloadLink();
@@ -119,8 +159,8 @@ function recomputeExport() {
         // Interval setter
         const intervalControls = createIntervalControls();
         const intervalNumber = intervalControls[0]; const intervalSlider = intervalControls[1];
-        const cell1 = row.insertCell(); cell1.appendChild(intervalNumber);
-        const cell2 = row.insertCell(); cell2.appendChild(intervalSlider);
+        row.insertCell().appendChild(intervalNumber);
+        row.insertCell().appendChild(intervalSlider);
         intervalNumber.addEventListener("change", () => {
             exportCurves[i] = new ExportCurve(curves[i], exportCurves[i]._mode, intervalNumber.value);
             downloadButton.href = exportCurves[i].generateDownloadLink();
@@ -143,6 +183,7 @@ function recomputeExport() {
                 downloadButton.href = exportCurves[i].generateDownloadLink();
             }
         });
+        downloadAllLink.addEventListener("click", () => downloadLink.click());
 
         updateModeUI(exportCurves[i]._mode, modeSelect, intervalNumber, intervalSlider);
         updateIntervalUI(exportCurves[i]._interval, intervalNumber, intervalSlider);

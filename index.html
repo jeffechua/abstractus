@@ -84,25 +84,15 @@
             <div id="degrid-div" style="display:none; position:relative"></div>
             <hr />
             <p>
-                <h3>Finalize <button id="finalize-toggle" onclick="toggleSection(SECTION.FINALIZE);">Show</button>
-                    <div style="display:flex; flex-direction:row">
-                        <table>
-                            <tr>
-                                <td>Independent variable:</td>
-                                <td><select id="uv-select" onchange="uvSelectChanged()">
-                                        <option value="true">x</option>
-                                        <option value="false">y</option>
-                                    </select></td>
-                            </tr>
-                            <tr>
-                                <td>Curve editing mode:</td>
-                                <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();">
-                                </td>
-                            </tr>
-                        </table>
-                        <div style="flex-grow:1"></div>
-                        <table>
-                            <tr>
+                <h3>Finalize
+                    <table style="padding-top:5px">
+                        <tr>
+                            <td>Independent variable:</td>
+                            <td><select id="uv-select" onchange="uvSelectChanged()">
+                                    <option value="true">x</option>
+                                    <option value="false">y</option>
+                                </select></td>
+                                <td style="width:20px"></td>
                                 <td>Reset:</td>
                                 <td><button onclick="if(progress>=SECTION.EXPORT) autoClean();">Deletions</button></td>
                                 <td><button onclick="resetAxes();">Axes</button>
@@ -110,11 +100,15 @@
                                 <td><button
                                         onclick="connections = []; if(progress>=SECTION.EXPORT) rebuildCurves();">Curves</button>
                                 </td>
-                            </tr>
-                        </table>
-                    </div>
+                        </tr>
+                        <tr>
+                            <td>Curve editing mode:</td>
+                            <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();">
+                            </td>
+                        </tr>
+                    </table>
                 </h3>
-                <div id="finalize-div" style="display:none; position:relative">
+                <div id="finalize-div" style="position:relative">
                     <canvas id="clean-mask-canvas"
                         style="position:absolute; left:0; top:0; z-index:2; opacity:90%"></canvas>
                     <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
@@ -122,24 +116,24 @@
                     <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:5"></canvas>
                     <canvas id="curve-temp-canvas" style="position:absolute; left:0; top:0; z-index:6"></canvas>
                     <canvas id="curve-perma-canvas" style="position:absolute; left:0; top:0; z-index:7"></canvas>
-                    <input type="text" style="position:absolute; z-index: 6; width:30" id="x-min-input" value="0"
+                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="x-min-input" value="0"
                         onchange="setExportBounds(this, 0);">
-                    <input type="text" style="position:absolute; z-index: 6; width:30" id="x-max-input" value="1"
+                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="x-max-input" value="1"
                         onchange="setExportBounds(this, 1);">
-                    <input type="text" style="position:absolute; z-index: 6; width:30" id="y-min-input" value="0"
+                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="y-min-input" value="0"
                         onchange="setExportBounds(this, 2);">
-                    <input type="text" style="position:absolute; z-index: 6; width:30" id="y-max-input" value="1"
+                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="y-max-input" value="1"
                         onchange="setExportBounds(this, 3);">
                 </div>
             </p>
         </div>
         <div style="margin-left: 20px">
             <p>
-                <h3>Export <button id="export-toggle" onclick="toggleSection(SECTION.EXPORT);">Show</button>
+                <h3>Export
                     <table id="downloads-table">
                     </table>
                 </h3>
-                <div id="export-div" style="display:none;position:relative">
+                <div id="export-div" style="position:relative">
                     <canvas id="export-canvas" style="position:absolute; left:0; top:0"></canvas>
                 </div>
             </p>
