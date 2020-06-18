@@ -244,6 +244,10 @@ if (degridDetectionNumber.value == "")
 else
     degridParams.detectionThreshold = degridDetectionNumber.value / 100;
 function setDegridDetectionThreshold(percentage) {
+    if (percentage == -1) {
+        setDegridDetectionThreshold(defaultDegridParams.detectionThreshold * 100);
+        return;
+    }
     degridParams.detectionThreshold = percentage / 100;
     degridDetectionSlider.value = percentage;
     degridDetectionNumber.value = percentage;
@@ -258,8 +262,10 @@ if (degridSlopeNumber.value == "")
 else
     degridParams.slopeThreshold = degridSlopeNumber.value / 100;
 function setDegridSlopeThreshold(percentage) {
-    // This could also be optimized similar to only partially recompute, but
-    // it would take effort and I'm lazy.
+    if (percentage == -1) {
+        setDegridSlopeThreshold(defaultDegridParams.slopeThreshold * 100);
+        return;
+    }
     degridParams.slopeThreshold = percentage / 100;
     degridSlopeSlider.value = percentage;
     degridSlopeNumber.value = percentage;
@@ -273,6 +279,10 @@ if (degridDefMarginNumber.value == "")
 else
     degridParams.defaultMargin = parseInt(degridDefMarginNumber.value);
 function setDegridDefaultMargin(value) {
+    if (value == -1) {
+        setDegridDefaultMargin(defaultDegridParams.defaultMargin);
+        return;
+    }
     degridParams.defaultMargin = parseInt(value);
     degridDefMarginNumber.value = value;
     // We could restore all default-margin grid lines, change the default,

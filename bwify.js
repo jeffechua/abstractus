@@ -51,6 +51,10 @@ if (bwifyNumber.value == "")
 else
     bwifyParams.intensityThreshold = bwifyNumber.value;
 function setBwifyIntensityThreshold(value) {
+    if (value == -1) {
+        setBwifyIntensityThreshold(defaultBwifyParams.intensityThreshold);
+        return;
+    }
     bwifyParams.intensityThreshold = value;
     bwifySlider.value = value;
     bwifyNumber.value = value;

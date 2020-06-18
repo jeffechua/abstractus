@@ -17,7 +17,7 @@ const xMinInput = document.getElementById("x-min-input");
 const xMaxInput = document.getElementById("x-max-input");
 const yMinInput = document.getElementById("y-min-input");
 const yMaxInput = document.getElementById("y-max-input");
-exportParams.bounds = [xMinInput.value, xMaxInput.value, yMinInput.value, yMaxInput.value];
+exportParams.bounds = [parseInt(xMinInput.value), parseInt(xMaxInput.value), parseInt(yMinInput.value), parseInt(yMaxInput.value)];
 
 cleanUICanvas.addEventListener("mousedown", cleanMouseDown);
 cleanUICanvas.addEventListener("mousemove", cleanMouseMove);
@@ -100,6 +100,10 @@ function generateFinalizeUI() {
     reposition(xMaxInput, l + w2, t + h2 + 3, 1, -1);
     reposition(yMinInput, l - 3, t + h2, 1, 1);
     reposition(yMaxInput, l - 3, t, 1, -1);
+    xMinInput.style.display = "block";
+    xMaxInput.style.display = "block";
+    yMinInput.style.display = "block";
+    yMaxInput.style.display = "block";
     // Initial draws and set up
     contexts[CANVAS.POSTCROP].drawImage(canvases[CANVAS.DEGRIDDED], l, t, w2, h2, 0, 0, w2, h2);
     frameContext.drawImage(canvases[CANVAS.ROTATED], 0, 0);

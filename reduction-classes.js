@@ -116,7 +116,7 @@ class Fragment {
 
 class Curve {
 
-    static colors = ["red", "green", "blue", "cyan", "magenta", "orange"];
+    static colors = ["red", "#409000", "blue", "#E238EC", "#E3A600", "#008080"];
     static c = 0;
 
     constructor(first) {
@@ -160,7 +160,8 @@ class Curve {
     }
 
     draw(slopes) {
-        reduceContext.strokeStyle = "yellow";
+        reduceContext.strokeStyle = this.color;
+        reduceContext.setLineDash([3, 3]);
         for (let i = 0; i < this.fragments.length - 1; i++) {
             const u1 = this.fragments[i].head.u + 0.5;
             const v1 = this.fragments[i].head.v + 0.5;
@@ -171,6 +172,7 @@ class Curve {
             reduceContext.lineTo(Reduction.axis ? u2 : v2, Reduction.axis ? v2 : u2);
             reduceContext.stroke();
         }
+        reduceContext.setLineDash([]);
         for (let i = 0; i < this.fragments.length; i++) {
             this.fragments[i].draw(this.color, slopes);
         }
@@ -235,4 +237,15 @@ class ExportCurve {
         exportContext.stroke();
         return this;
     }
+
+    highlight() {
+        exportHighlightContext.strokeStyle = this.color;
+        exportHighlightContext.beginPath();
+        exportHighlightContext.moveTo(this.data[0].x + exportDrawing.l + 0.5, this.data[0].y + exportDrawing.t + 0.5);
+        for (let i = 1; i < this.data.length; i++) {
+            exportHighlightContext.lineTo(this.data[i].x + exportDrawing.l + 0.5, this.data[i].y + exportDrawing.t + 0.5);
+        }
+        exportHighlightContext.stroke();
+    }
+
 }

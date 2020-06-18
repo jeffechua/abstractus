@@ -25,10 +25,12 @@ for (let i = 0; i < sectionNames.length; i++) {
 
 function toggleSection(i) {
     if (sectionToggles[i].innerText == "Show") {
-        sectionDivs[i].style.display = "block";
+        sectionDivs[i].classList.remove("section-contents-hidden");
+        sectionDivs[i].classList.add("section-contents-shown");
         sectionToggles[i].innerText = "Hide";
     } else {
-        sectionDivs[i].style.display = "none";
+        sectionDivs[i].classList.add("section-contents-hidden");
+        sectionDivs[i].classList.remove("section-contents-shown");
         sectionToggles[i].innerText = "Show";
     }
 }

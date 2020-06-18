@@ -1,0 +1,58 @@
+.positionable-parent {
+    position: relative;
+}
+
+.positionable-child {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.axis-bound-input {
+    display: none;
+    position: absolute;
+    z-index: 8;
+    width: 30;
+}
+
+.table-hspace {
+    width: 20px;
+}
+
+.input-number {
+    width: 50px;
+}
+
+.section-contents-shown {
+    display: block;
+}
+
+.section-contents-hidden {
+    display: none;
+}
+
+.row-flexbox {
+    display: flex;
+    flex-direction: row;
+}
+
+.left-column {
+    border-right: 1px solid black;
+}
+
+.right-column {
+    padding-top: 0px;
+    margin-left: 20px;
+}
+
+.section-header {
+    margin-bottom: 5px;
+}
+
+.toprule {
+    margin-bottom: 0px;
+}
+
+.section {
+    margin-right: 5px;
+}

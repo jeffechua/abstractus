@@ -32,6 +32,8 @@ const exportParams = {
 
 const exportCanvas = document.getElementById("export-canvas");
 const exportContext = exportCanvas.getContext("2d");
+const exportHighlightCanvas = document.getElementById("export-highlight-canvas");
+const exportHighlightContext = exportHighlightCanvas.getContext("2d");
 const downloadsTable = document.getElementById("downloads-table");
 
 function setExportBounds(input, target) {
@@ -40,6 +42,7 @@ function setExportBounds(input, target) {
         input.value = exportParams.Bounds[target];
     } else {
         exportParams.bounds[target] = value;
+        input.value = value;
         recomputeExport();
     }
     input.blur();
@@ -63,6 +66,9 @@ function recomputeExport() {
 
     exportCanvas.width = w2 + 1 + exportDrawing.leftMargin;
     exportCanvas.height = h2 + 1 + exportDrawing.bottomMargin;
+    exportHighlightCanvas.width = w2 + 1 + exportDrawing.leftMargin;
+    exportHighlightCanvas.height = h2 + 1 + exportDrawing.bottomMargin;
+    exportHighlightContext.lineWidth = 2;
 
     exportCurves = curves.map((curve) => new ExportCurve(curve, EXPORTMODE.DEFAULT, -1));
 
@@ -89,7 +95,7 @@ function recomputeExport() {
 
     downloadsTable.insertRow().insertCell();
 
-    select.selectedIndex = exportParams.defaultMode;
+    select.selectedIndex = exportParams.defaultMode + 1;
     intervalNumber.value = exportParams.defaultInterval;
     intervalSlider.value = exportParams.defaultInterval;
 
@@ -103,19 +109,19 @@ function recomputeExport() {
 
         const row = downloadsTable.rows[i % nRows + 3];
 
-        // Dataset name
-        const nameCell = row.insertCell();
-        const labelText = document.createElement("span");
-        labelText.style.color = exportCurves[i].color;
-        labelText.innerText = "Data " + (i + 1);
-        nameCell.appendChild(labelText);
-
         // Download link
         const downloadLink = document.createElement("a");
         downloadLink.innerText = "Download";
         downloadLink.href = exportCurves[i].generateDownloadLink();
         downloadLink.download = "Data_" + (i + 1) + ".csv";
         row.insertCell().appendChild(downloadLink);
+
+        // Dataset name
+        const nameCell = row.insertCell();
+        const labelText = document.createElement("span");
+        labelText.style.color = exportCurves[i].color;
+        labelText.innerText = "Data " + (i + 1);
+        nameCell.appendChild(labelText);
 
         // Dataset name editing
         const nameEdit = document.createElement("input");
@@ -129,12 +135,16 @@ function recomputeExport() {
             downloadLink.download = nameEdit.value.replace(" ", "_") + ".csv";
             labelText.style.display = "block";
             nameEdit.style.display = "none";
+            exportHighlightContext.clearRect(0, 0, exportHighlightCanvas.width, exportHighlightCanvas.height);
+            exportCanvas.style.opacity = "100%";
         });
         nameEdit.addEventListener("keydown", (e) => {
-            if(e.key=="Escape") {
+            if (e.key == "Escape") {
                 labelText.style.display = "block";
                 nameEdit.style.display = "none";
                 nameEdit.value = labelText.innerText;
+                exportHighlightContext.clearRect(0, 0, exportHighlightCanvas.width, exportHighlightCanvas.height);
+                exportCanvas.style.opacity = "100%";
             }
         })
         labelText.addEventListener("dblclick", () => {
@@ -142,6 +152,8 @@ function recomputeExport() {
             nameEdit.style.display = "block";
             nameEdit.focus();
             nameEdit.select();
+            exportCurves[i].highlight();
+            exportCanvas.style.opacity = "50%";
         })
         nameEdit.style.display = "none";
         nameCell.appendChild(nameEdit);
@@ -151,7 +163,7 @@ function recomputeExport() {
         row.insertCell().appendChild(modeSelect);
         modeSelect.addEventListener("change", () => {
             exportCurves[i] = new ExportCurve(curves[i], parseInt(modeSelect.value), exportCurves[i]._interval);
-            downloadButton.href = exportCurves[i].generateDownloadLink();
+            downloadLink.href = exportCurves[i].generateDownloadLink();
             updateModeUI(exportCurves[i]._mode, modeSelect, intervalNumber, intervalSlider);
             redrawExport();
         });
@@ -163,13 +175,13 @@ function recomputeExport() {
         row.insertCell().appendChild(intervalSlider);
         intervalNumber.addEventListener("change", () => {
             exportCurves[i] = new ExportCurve(curves[i], exportCurves[i]._mode, intervalNumber.value);
-            downloadButton.href = exportCurves[i].generateDownloadLink();
+            downloadLink.href = exportCurves[i].generateDownloadLink();
             updateIntervalUI(exportCurves[i]._interval, intervalNumber, intervalSlider);
             redrawExport();
         });
         intervalSlider.addEventListener("change", () => {
             exportCurves[i] = new ExportCurve(curves[i], exportCurves[i]._mode, intervalSlider.value);
-            downloadButton.href = exportCurves[i].generateDownloadLink();
+            downloadLink.href = exportCurves[i].generateDownloadLink();
             updateIntervalUI(exportCurves[i]._interval, intervalNumber, intervalSlider);
             redrawExport();
         });
@@ -180,7 +192,7 @@ function recomputeExport() {
                 exportCurves[i] = new ExportCurve(curves[i], exportCurves[i]._mode, exportCurves[i]._interval);
                 updateModeUI(exportCurves[i]._mode, modeSelect, intervalNumber, intervalSlider);
                 updateIntervalUI(exportCurves[i]._interval, intervalNumber, intervalSlider);
-                downloadButton.href = exportCurves[i].generateDownloadLink();
+                downloadLink.href = exportCurves[i].generateDownloadLink();
             }
         });
         downloadAllLink.addEventListener("click", () => downloadLink.click());
@@ -220,21 +232,23 @@ function recomputeExport() {
 
 function createModeDropdown() {
     const select = document.createElement("select");
+    const def = document.createElement("option");
     const all = document.createElement("option");
     const intvl = document.createElement("option");
     const dist = document.createElement("option");
-    select.selectedIndex = exportParams.defaultMode;
+    select.selectedIndex = exportParams.defaultMode + 1;
+    def.value = EXPORTMODE.DEFAULT; def.innerText = "Reset to default";
     all.value = EXPORTMODE.ALL; all.innerText = "All data";
     intvl.value = EXPORTMODE.FIXED_INTERVAL; intvl.innerText = "Fixed intervals";
     dist.value = EXPORTMODE.FIXED_DISTANCE; dist.innerText = "Fixed distances";
-    select.add(all); select.add(intvl); select.add(dist);
+    select.add(def); select.add(all); select.add(intvl); select.add(dist);
     select.style.width = "120px";
     return select;
 }
 
 function updateModeUI(_mode, select, number, slider) {
     const mode = _mode == EXPORTMODE.DEFAULT ? exportParams.defaultMode : _mode;
-    select.selectedIndex = mode; // this depends on the options being 1:1 corresponding to EXPORTMODE
+    select.selectedIndex = mode + 1;
     if (mode != EXPORTMODE.ALL) {
         number.style.display = "block";
         slider.style.display = "block";
@@ -279,6 +293,7 @@ function redrawExport() {
     const yPrecision = Math.pow(10, Math.round(Math.log10(exportParams.exportHeight)) - 2);
 
     for (let i = 1; i < xGridLines.length - 1; i++) {
+        if(!xGridLines.active) continue;
         const x = Math.round(xGridLines[i].center) - l;
         const exportX = exportParams.exportX(x);
         exportContext.beginPath();
@@ -288,6 +303,7 @@ function redrawExport() {
         writeText(Math.round(exportX / xPrecision) * xPrecision, exportContext, exportDrawing.l + x, exportDrawing.b + exportDrawing.textMargin, 0, -1);
     }
     for (let i = 1; i < yGridLines.length - 1; i++) {
+        if(!yGridLines.active) continue;
         const y = Math.round(yGridLines[i].center) - t;
         const exportY = exportParams.exportY(y);
         exportContext.beginPath();

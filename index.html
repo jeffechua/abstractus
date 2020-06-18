@@ -2,7 +2,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Abstractus</title>
+    <title>abstractus</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
@@ -10,133 +11,129 @@
         <input type="file" id="source-selector" accept=".png" onchange="onSourceChanged();">
         <button onclick="onSourceChanged();">Resubmit</button>
     </p>
-    <hr />
-    <div style="display:flex; flex-direction:row">
-        <div style="border-right: 1px solid black">
-            <p>
-                <h3>Rotation correction <button id="rotation-toggle"
-                        onclick="toggleSection(SECTION.ROTATION);">Show</button>
+    <hr class="toprule" />
+    <div class="row-flexbox">
+        <div class="left-column">
+            <div class="section">
+                <h3 class="section-header">Rotation correction
+                    <button id="rotation-toggle" onclick="toggleSection(SECTION.ROTATION);">Show</button>
                 </h3>
-            </p>
-            <div id="rotation-div" style="display:none"></div>
-            <hr />
-            <p>
-                <h3>Bwify <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button>
-                    <table>
-                        <tr>
-                            <td>Cutoff:</td>
-                            <td><input type="number" min="0.0" max="1.0" step="0.02" id="bwify-thresh-number"
-                                    style="width:50px" onchange="setBwifyIntensityThreshold(this.value);"></td>
-                            <td><input type="range" min="0.0" max="1.0" step="0.02" class="slider"
-                                    id="bwify-thresh-slider" onchange="setBwifyIntensityThreshold(this.value);"></td>
-                            <td><button
-                                    onclick="setBwifyIntensityThreshold(defaultBwifyParams.intensityThreshold)">Reset</button>
-                            </td>
-                        </tr>
-                    </table>
-                </h3>
-            </p>
-            <div id="bwify-div" style="display:none">
-                <canvas id="bwify-canvas"></canvas>
+                <div id="rotation-div" class="section-contents-hidden"></div>
             </div>
             <hr />
-            <p>
-                <h3>Degridding <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button>
-                    <table>
-                        <tr>
-                            <td><a
-                                    title="When the frequency (in % of max registered frequency) exceeds this value, a grid line is registered.">Detection
-                                    threshold</a> (%):</td>
-                            <td><input type="number" min="0" max="100" id="degrid-detection-number" style="width:50px"
-                                    onchange="setDegridDetectionThreshold(this.value);"></td>
-                            <td><input type="range" min="0" max="100" class="slider" id="degrid-detection-slider"
-                                    onchange="setDegridDetectionThreshold(this.value);"></td>
-                            <td><button
-                                    onclick="setDegridDetectionThreshold(defaultDegridParams.detectionThreshold*100);">Reset</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><a
-                                    title="After a grid line is registered, its registered span is extended in both directions until the rate of decrease of the frequency graph (in % of max registered frequency / pixel) goes below this threshold.">Slope
-                                    threshold</a> (%/px):</td>
-                            <td><input type="number" min="0" max="100" id="degrid-slope-number" style="width:50px"
-                                    onchange="setDegridSlopeThreshold(this.value);"></td>
-                            <td><input type="range" min="0" max="100" class="slider" id="degrid-slope-slider"
-                                    onchange="setDegridSlopeThreshold(this.value);"></td>
-                            <td><button
-                                    onclick="setDegridSlopeThreshold(defaultDegridParams.slopeThreshold*100);">Reset</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><a
-                                    title="After a grid line's span is resolved as per the slope threshold, a further margin of this number of pixels is added to the front and back (unless specifically set otherwise in the advanced interface below).">Default
-                                    margin</a> (px):</td>
-                            <td><input type="number" min="0" max="9" id="degrid-defmargin-number" style="width:50px"
-                                    onchange="setDegridDefaultMargin(this.value);"></td>
-                            <td></td>
-                            <td><button
-                                    onclick="setDegridDefaultMargin(defaultDegridParams.defaultMargin);">Reset</button>
-                            </td>
-                        </tr>
-                    </table>
-                </h3>
-            </p>
-            <div id="degrid-div" style="display:none; position:relative"></div>
+            <div class="section">
+                <h3 class="section-header">Bwify
+                    <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button></h3>
+                <table>
+                    <tr>
+                        <td>Cutoff:</td>
+                        <td><input type="number" min="0.0" max="1.0" step="0.02" id="bwify-thresh-number"
+                                class="input-number" onchange="setBwifyIntensityThreshold(this.value);"></td>
+                        <td><input type="range" min="0.0" max="1.0" step="0.02" class="slider" id="bwify-thresh-slider"
+                                onchange="setBwifyIntensityThreshold(this.value);"></td>
+                        <td><button
+                                onclick="setBwifyIntensityThreshold(defaultBwifyParams.intensityThreshold)">Reset</button>
+                        </td>
+                    </tr>
+                </table>
+                <div id="bwify-div" class="section-contents-hidden">
+                    <canvas id="bwify-canvas"></canvas>
+                </div>
+            </div>
             <hr />
-            <p>
-                <h3>Finalize
-                    <table style="padding-top:5px">
-                        <tr>
-                            <td>Independent variable:</td>
-                            <td><select id="uv-select" onchange="uvSelectChanged()">
-                                    <option value="true">x</option>
-                                    <option value="false">y</option>
-                                </select></td>
-                                <td style="width:20px"></td>
-                                <td>Reset:</td>
-                                <td><button onclick="if(progress>=SECTION.EXPORT) autoClean();">Deletions</button></td>
-                                <td><button onclick="resetAxes();">Axes</button>
-                                </td>
-                                <td><button
-                                        onclick="connections = []; if(progress>=SECTION.EXPORT) rebuildCurves();">Curves</button>
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>Curve editing mode:</td>
-                            <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();">
-                            </td>
-                        </tr>
-                    </table>
-                </h3>
-                <div id="finalize-div" style="position:relative">
-                    <canvas id="clean-mask-canvas"
-                        style="position:absolute; left:0; top:0; z-index:2; opacity:90%"></canvas>
-                    <canvas id="clean-frame-canvas" style="position:absolute; left:0; top:0; z-index:3"></canvas>
-                    <canvas id="reduce-canvas" style="position:absolute; left:0; top:0; z-index:4"></canvas>
-                    <canvas id="clean-ui-canvas" style="position:absolute; left:0; top:0; z-index:5"></canvas>
-                    <canvas id="curve-temp-canvas" style="position:absolute; left:0; top:0; z-index:6"></canvas>
-                    <canvas id="curve-perma-canvas" style="position:absolute; left:0; top:0; z-index:7"></canvas>
-                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="x-min-input" value="0"
+            <div class="section">
+                <h3 class="section-header">Degridding
+                    <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button></h3>
+                <table>
+                    <tr>
+                        <td><a
+                                title="When the frequency (in % of max registered frequency) exceeds this value, a grid line is registered.">Detection
+                                threshold</a> (%):</td>
+                        <td><input type="number" min="0" max="100" id="degrid-detection-number" class="input-number"
+                                onchange="setDegridDetectionThreshold(this.value);"></td>
+                        <td><input type="range" min="0" max="100" class="slider" id="degrid-detection-slider"
+                                onchange="setDegridDetectionThreshold(this.value);"></td>
+                        <td><button
+                                onclick="setDegridDetectionThreshold(defaultDegridParams.detectionThreshold*100);">Reset</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><a
+                                title="After a grid line is registered, its registered span is extended in both directions until the rate of decrease of the frequency graph (in % of max registered frequency / pixel) goes below this threshold.">Slope
+                                threshold</a> (%/px):</td>
+                        <td><input type="number" min="0" max="100" id="degrid-slope-number" class="input-number"
+                                onchange="setDegridSlopeThreshold(this.value);"></td>
+                        <td><input type="range" min="0" max="100" class="slider" id="degrid-slope-slider"
+                                onchange="setDegridSlopeThreshold(this.value);"></td>
+                        <td><button
+                                onclick="setDegridSlopeThreshold(defaultDegridParams.slopeThreshold*100);">Reset</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><a
+                                title="After a grid line's span is resolved as per the slope threshold, a further margin of this number of pixels is added to the front and back (unless specifically set otherwise in the advanced interface below).">Default
+                                margin</a> (px):</td>
+                        <td><input type="number" min="0" max="9" id="degrid-defmargin-number" class="input-number"
+                                onchange="setDegridDefaultMargin(this.value);"></td>
+                        <td></td>
+                        <td><button onclick="setDegridDefaultMargin(defaultDegridParams.defaultMargin);">Reset</button>
+                        </td>
+                    </tr>
+                </table>
+                <div id="degrid-div" class="section-contents-hidden positionable-parent"></div>
+            </div>
+            <hr />
+            <div class="section">
+                <h3 class="section-header">Finalize </h3>
+                <table>
+                    <tr>
+                        <td>Independent variable:</td>
+                        <td><select id="uv-select" onchange="uvSelectChanged()">
+                                <option value="true">x</option>
+                                <option value="false">y</option>
+                            </select></td>
+                        <td class="table-hspace"></td>
+                        <td>Reset:</td>
+                        <td><button onclick="if(progress>=SECTION.EXPORT) autoClean();">Deletions</button></td>
+                        <td><button onclick="resetAxes();">Axes</button>
+                        </td>
+                        <td><button
+                                onclick="connections = []; if(progress>=SECTION.EXPORT) rebuildCurves();">Curves</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Curve editing mode:</td>
+                        <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();">
+                        </td>
+                    </tr>
+                </table>
+                <div id="finalize-div" class="positionable-parent">
+                    <canvas id="clean-mask-canvas" class="positionable-child" style=" z-index:2; opacity:90%"></canvas>
+                    <canvas id="clean-frame-canvas" class="positionable-child" style="z-index:3"></canvas>
+                    <canvas id="reduce-canvas" class="positionable-child" style="z-index:4"></canvas>
+                    <canvas id="clean-ui-canvas" class="positionable-child" style="z-index:5"></canvas>
+                    <canvas id="curve-temp-canvas" class="positionable-child" style="z-index:6"></canvas>
+                    <canvas id="curve-perma-canvas" class="positionable-child" style="z-index:7"></canvas>
+                    <input type="text" class="axis-bound-input" id="x-min-input" value="0"
                         onchange="setExportBounds(this, 0);">
-                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="x-max-input" value="1"
+                    <input type="text" class="axis-bound-input" id="x-max-input" value="1"
                         onchange="setExportBounds(this, 1);">
-                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="y-min-input" value="0"
+                    <input type="text" class="axis-bound-input" id="y-min-input" value="0"
                         onchange="setExportBounds(this, 2);">
-                    <input type="text" style="display:none; position:absolute; z-index: 6; width:30" id="y-max-input" value="1"
+                    <input type="text" class="axis-bound-input" id="y-max-input" value="1"
                         onchange="setExportBounds(this, 3);">
                 </div>
-            </p>
+            </div>
         </div>
-        <div style="margin-left: 20px">
+        <div class="right-column">
             <p>
-                <h3>Export
-                    <table id="downloads-table">
-                    </table>
-                </h3>
-                <div id="export-div" style="position:relative">
-                    <canvas id="export-canvas" style="position:absolute; left:0; top:0"></canvas>
-                </div>
+                <h3 class="section-header">Export</h3>
+                <table id="downloads-table"></table>
             </p>
+            <div class="positionable-parent">
+                <canvas id="export-canvas" class="positionable-child" style="z-index: 1"></canvas>
+                <canvas id="export-highlight-canvas" class="positionable-child" style="z-index: 2"></canvas>
+            </div>
         </div>
     </div>
 </body>
