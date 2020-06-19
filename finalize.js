@@ -17,7 +17,11 @@ const xMinInput = document.getElementById("x-min-input");
 const xMaxInput = document.getElementById("x-max-input");
 const yMinInput = document.getElementById("y-min-input");
 const yMaxInput = document.getElementById("y-max-input");
-exportParams.bounds = [parseInt(xMinInput.value), parseInt(xMaxInput.value), parseInt(yMinInput.value), parseInt(yMaxInput.value)];
+exportParams.bounds = [parseFloat(xMinInput.value), parseFloat(xMaxInput.value), parseFloat(yMinInput.value), parseFloat(yMaxInput.value)];
+
+const xLog = document.getElementById("x-log");
+const yLog = document.getElementById("y-log");
+exportParams.logScale = [xLog.checked, yLog.checked];
 
 cleanUICanvas.addEventListener("mousedown", cleanMouseDown);
 cleanUICanvas.addEventListener("mousemove", cleanMouseMove);
@@ -107,7 +111,7 @@ function generateFinalizeUI() {
     // Initial draws and set up
     contexts[CANVAS.POSTCROP].drawImage(canvases[CANVAS.DEGRIDDED], l, t, w2, h2, 0, 0, w2, h2);
     frameContext.drawImage(canvases[CANVAS.ROTATED], 0, 0);
-    frameContext.clearRect(l+1, t+1, w2-1, h2-1);
+    frameContext.clearRect(l + 1, t + 1, w2 - 1, h2 - 1);
     maskContext.fillStyle = "white"; // This cannot be done outside since resizing a canvas clears context
 
     autoClean();
@@ -124,7 +128,7 @@ function uvSelectChanged() {
 const curveEditToggle = document.getElementById("curve-edit-toggle");
 curveEditToggleChanged();
 function curveEditToggleChanged() {
-    if(curveEditToggle.checked) {
+    if (curveEditToggle.checked) {
         canvases[CANVAS.POSTCROP].style.display = "none";
         curvePermaCanvas.style.display = "block";
         curveTempCanvas.style.display = "block";
@@ -133,4 +137,33 @@ function curveEditToggleChanged() {
         curvePermaCanvas.style.display = "none";
         curveTempCanvas.style.display = "none";
     }
+}
+
+function setExportBounds(input, target) {
+    const value = parseFloat(input.value);
+    if (value == undefined) {
+        input.value = exportParams.Bounds[target];
+    } else {
+        exportParams.bounds[target] = value;
+        input.value = value;
+        if (progress >= SECTION.EXPORT)
+            recomputeExport();
+    }
+    input.blur();
+}
+
+function setLog(input, target) {
+    exportParams.logScale[target] = input.checked;
+    if (progress >= SECTION.EXPORT)
+        recomputeExport();
+}
+
+function resetAxes() {
+    exportParams.bounds = [0, 1, 0, 1];
+    xMinInput.value = 0;
+    xMaxInput.value = 1;
+    yMinInput.value = 0;
+    yMaxInput.value = 1;
+    if (progress >= SECTION.EXPORT)
+        recomputeExport();
 }

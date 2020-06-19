@@ -21,7 +21,9 @@
                     <h3 class="section-header-text">Rotation correction&nbsp;</h3>
                     <button id="rotation-toggle" onclick="toggleSection(SECTION.ROTATION);">Show</button>
                     <div class="flex-grower"></div>
-                    <div><span class="hint-box" title="This section controls the rotation of the image to aligned axes. There are no inputs, but if there's something wrong you can open the expanded view to troubleshoot out what it is.">?</span></div>
+                    <div><span class="hint-box"
+                            title="This section controls the rotation of the image to aligned axes. There are no inputs, but if there's something wrong you can open the expanded view to troubleshoot out what it is.">?</span>
+                    </div>
                 </div>
                 <div id="rotation-div" class="section-contents-hidden"></div>
             </div>
@@ -31,7 +33,9 @@
                     <h3 class="section-header-text">Bwify&nbsp;</h3>
                     <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button>
                     <div class="flex-grower"></div>
-                    <div><span class="hint-box" title="This section controls the conversion of the image to black and white. The slider controls the color value cutoff for black versus white. Input '-1' to reset to default. If your curve is very fragmented (and not due to grid lines), increase the cutoff.">?</span></div>
+                    <div><span class="hint-box"
+                            title="This section controls the conversion of the image to black and white. The slider controls the color value cutoff for black versus white. Input '-1' to reset to default. If your curve is very fragmented (and not due to grid lines), increase the cutoff.">?</span>
+                    </div>
                 </div>
                 <table>
                     <tr>
@@ -55,7 +59,9 @@
                     <h3 class="section-header-text">Degridding&nbsp;</h3>
                     <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button>
                     <div class="flex-grower"></div>
-                    <div><span class="hint-box" title="This section controls the identification and removal of grid lines. Mouseover the parameter labels for details. The margins for individual grid lines can be modified in the expanded view. Input '-1' in any field to reset to default. Modify the first parameter if a grid line isn't being picked up, and modify the others if not the whole grid line is being clipped out.">?</span></div>
+                    <div><span class="hint-box"
+                            title="This section controls the identification and removal of grid lines. Mouseover the parameter labels for details. The margins for individual grid lines can be modified in the expanded view. Input '-1' in any field to reset to default. Modify the first parameter if a grid line isn't being picked up, and modify the others if not the whole grid line is being clipped out.">?</span>
+                    </div>
                 </div>
                 <table>
                     <tr>
@@ -100,29 +106,40 @@
                 <div class="section-header-flexbox">
                     <h3 class="section-header-text">Finalize</h3>
                     <div class="flex-grower"></div>
-                    <div><span class="hint-box" title="Erasure mode (default): click and drag to erase rectangles; shift-click and drag to restore; alt-click to erase one whole contiguous fragment. Use this to delete noise/artifacts from the data.&#013;&#010;&#013;&#010;Curve editing mode (toggle): drag from node to node to create a connection; drag through blank space to cut connections; double-click on nodes to cap/uncap. Use this to fix things if the fragments aren't being correctly connected automatically.">?</span></div>
+                    <div><span class="hint-box"
+                            title="Erasure mode (default): click and drag to erase rectangles; shift-click and drag to restore; alt-click to erase one whole contiguous fragment. Use this to delete noise/artifacts from the data. (Hint: keep an eye on the export graph to the right for kinks.)&#013;&#010;&#013;&#010;Curve editing mode (toggle): drag from node to node to create a connection; drag through blank space to cut connections; double-click on nodes to cap/uncap. Use this to fix things if the fragments aren't being correctly connected automatically.">?</span>
+                    </div>
                 </div>
                 <table>
                     <tr0>
-                        <td><span title="If x is the independent variable, the datasets will be y=f(x). Parametric curves 'looping back' along both x and y axes are not supported.">Independent variable:</span></td>
+                        <td><span
+                                title="If x is the independent variable, the datasets will be y=f(x). Parametric curves 'looping back' along both x and y axes are not supported.">Independent
+                                variable:</span></td>
                         <td><select id="uv-select" onchange="uvSelectChanged()">
                                 <option value="true">x</option>
                                 <option value="false">y</option>
                             </select></td>
                         <td class="table-hspace"></td>
-                        <td>Reset:</td>
+                        <td class="rightalign-cell">Reset:</td>
                         <td><button onclick="if(progress>=SECTION.EXPORT) autoClean();">Erasures</button></td>
                         <td><button onclick="resetAxes();">Axes</button>
                         </td>
                         <td><button
                                 onclick="connections = []; if(progress>=SECTION.EXPORT) rebuildCurves();">Curves</button>
                         </td>
-                    </tr>
-                    <tr>
-                        <td>Curve editing mode:</td>
-                        <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();">
-                        </td>
-                    </tr>
+                        </tr>
+                        <tr>
+                            <td>Curve editing mode:</td>
+                            <td><input type="checkbox" id="curve-edit-toggle" onchange="curveEditToggleChanged();"></td>
+                            <td class="table-hspace"></td>
+                            <td class="rightalign-cell">Log scale:</td>
+                            <td>
+                                <label for="x-log">x</label><input type="checkbox" id="x-log"
+                                    onchange="setLog(this,0);">
+                                <label for="y-log">y</label><input type="checkbox" id="y-log"
+                                    onchange="setLog(this,1);">
+                            </td>
+                        </tr>
                 </table>
                 <div id="finalize-div" class="positionable-parent">
                     <canvas id="clean-mask-canvas" class="positionable-child" style=" z-index:2; opacity:90%"></canvas>
@@ -146,9 +163,12 @@
             <div class="section-header-flexbox">
                 <h3 class="section-header-text">Export&nbsp;</h3>
                 <div class="flex-grower"></div>
-                <div><span class="hint-box" title="Rename, filter and download your datasets here. Double-click a name to rename it and see the curve it refers to. There are three data export modes:&#013;&#010;&#013;&#010;All data: one data point for every pixel along the independent variable axis.&#013;&#010;Fixed intervals: data points at fixed intervals along the independent variable axis.&#013;&#010;Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change slope a lot.">?</span></div>
+                <div><span class="hint-box"
+                        title="Rename, filter and download your datasets here. Double-click a name to rename it and see the curve it refers to. There are three data export modes:&#013;&#010;&#013;&#010;All data: one data point for every pixel along the independent variable axis.&#013;&#010;Fixed intervals: data points at fixed intervals along the independent variable axis.&#013;&#010;Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change slope a lot.">?</span>
+                </div>
             </div>
             <table id="downloads-table"></table>
+            <br />
             <div class="positionable-parent">
                 <canvas id="export-canvas" class="positionable-child" style="z-index: 1"></canvas>
                 <canvas id="export-highlight-canvas" class="positionable-child" style="z-index: 2"></canvas>

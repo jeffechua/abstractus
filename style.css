@@ -79,3 +79,7 @@
     margin-right: 5px;
     border: 1px solid black;
 }
+
+.rightalign-cell {
+    text-align: end;
+}

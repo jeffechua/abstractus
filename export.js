@@ -19,14 +19,21 @@ const EXPORTMODE = {
 const exportParams = {
     defaultMode: EXPORTMODE.ALL,
     defaultInterval: 5,
+    logScale: [false, false],
     bounds: [0, 1, 0, 1],
     get exportWidth() { return this.bounds[1] - this.bounds[0]; },
     get exportHeight() { return this.bounds[3] - this.bounds[2]; },
     exportX: function (x) {
-        return this.bounds[0] + this.exportWidth * x / w2;
+        if (exportParams.logScale[0])
+            return Math.pow(10, Math.log10(this.bounds[0]) + Math.log10(this.bounds[1] / this.bounds[0]) * x / w2);
+        else
+            return this.bounds[0] + this.exportWidth * x / w2;
     },
     exportY: function (y) {
-        return this.bounds[2] + this.exportHeight * (h2 - y) / h2;
+        if (exportParams.logScale[1])
+            return Math.pow(10, Math.log10(this.bounds[2]) + Math.log10(this.bounds[3] / this.bounds[2]) * (h2 - y) / h2);
+        else
+            return this.bounds[2] + this.exportHeight * (h2 - y) / h2;
     }
 }
 
@@ -35,28 +42,6 @@ const exportContext = exportCanvas.getContext("2d");
 const exportHighlightCanvas = document.getElementById("export-highlight-canvas");
 const exportHighlightContext = exportHighlightCanvas.getContext("2d");
 const downloadsTable = document.getElementById("downloads-table");
-
-function setExportBounds(input, target) {
-    const value = parseInt(input.value);
-    if (value == undefined) {
-        input.value = exportParams.Bounds[target];
-    } else {
-        exportParams.bounds[target] = value;
-        input.value = value;
-        recomputeExport();
-    }
-    input.blur();
-}
-
-function resetAxes() {
-    exportParams.bounds = [0, 1, 0, 1];
-    xMinInput.value = 0;
-    xMaxInput.value = 1;
-    yMinInput.value = 0;
-    yMaxInput.value = 1;
-    if (progress >= SECTION.EXPORT)
-        recomputeExport();
-}
 
 let exportCurves;
 
@@ -289,38 +274,40 @@ function redrawExport() {
     exportContext.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
 
     exportContext.strokeStyle = "black";
-    const xPrecision = Math.pow(10, Math.round(Math.log10(exportParams.exportWidth)) - 2);
-    const yPrecision = Math.pow(10, Math.round(Math.log10(exportParams.exportHeight)) - 2);
+    const xPrecision = Math.max(0, 2 - Math.round(Math.log10(exportParams.exportWidth)));
+    const yPrecision = Math.max(0, 2 - Math.round(Math.log10(exportParams.exportHeight)));
+    const xFormat = exportParams.logScale[0] ? (x) => x.toExponential(1) : (x) => x.toFixed(xPrecision);
+    const yFormat = exportParams.logScale[1] ? (y) => y.toExponential(1) : (y) => x.toFixed(xPrecision);
 
     for (let i = 1; i < xGridLines.length - 1; i++) {
-        if(!xGridLines.active) continue;
+        if (!xGridLines[i].active) continue;
         const x = Math.round(xGridLines[i].center) - l;
         const exportX = exportParams.exportX(x);
         exportContext.beginPath();
         exportContext.moveTo(exportDrawing.l + x + 0.5, exportDrawing.t + 0.5);
         exportContext.lineTo(exportDrawing.l + x + 0.5, exportDrawing.b + 0.5);
         exportContext.stroke();
-        writeText(Math.round(exportX / xPrecision) * xPrecision, exportContext, exportDrawing.l + x, exportDrawing.b + exportDrawing.textMargin, 0, -1);
+        writeText(xFormat(exportX), exportContext, exportDrawing.l + x, exportDrawing.b + exportDrawing.textMargin, 0, -1);
     }
     for (let i = 1; i < yGridLines.length - 1; i++) {
-        if(!yGridLines.active) continue;
+        if (!yGridLines[i].active) continue;
         const y = Math.round(yGridLines[i].center) - t;
         const exportY = exportParams.exportY(y);
         exportContext.beginPath();
         exportContext.moveTo(exportDrawing.l + 0.5, exportDrawing.t + y + 0.5);
         exportContext.lineTo(exportDrawing.r + 0.5, exportDrawing.t + y + 0.5);
         exportContext.stroke();
-        writeText(Math.round(exportY / yPrecision) * yPrecision, exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.t + y, 1, 0);
+        writeText(yFormat(exportY), exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.t + y, 1, 0);
     }
     exportCurves.map((curve) => curve.draw());
     exportContext.strokeStyle = "black";
     exportContext.strokeRect(exportDrawing.l + 0.5, exportDrawing.t + 0.5, w2, h2);
 
     exportContext.fillStyle = "black";
-    writeText(exportParams.bounds[0], exportContext, exportDrawing.l + exportDrawing.textMargin, exportDrawing.b + exportDrawing.textMargin, -1, -1);
-    writeText(exportParams.bounds[1], exportContext, exportDrawing.r - exportDrawing.textMargin, exportDrawing.b + exportDrawing.textMargin, +1, -1);
-    writeText(exportParams.bounds[2], exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.b - exportDrawing.textMargin, +1, +1);
-    writeText(exportParams.bounds[3], exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.t + exportDrawing.textMargin, +1, -1);
+    writeText(xFormat(exportParams.bounds[0]), exportContext, exportDrawing.l + exportDrawing.textMargin, exportDrawing.b + exportDrawing.textMargin, -1, -1);
+    writeText(xFormat(exportParams.bounds[1]), exportContext, exportDrawing.r - exportDrawing.textMargin, exportDrawing.b + exportDrawing.textMargin, +1, -1);
+    writeText(yFormat(exportParams.bounds[2]), exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.b - exportDrawing.textMargin, +1, +1);
+    writeText(yFormat(exportParams.bounds[3]), exportContext, exportDrawing.l - exportDrawing.textMargin, exportDrawing.t + exportDrawing.textMargin, +1, -1);
 
 }
 
