@@ -81,7 +81,6 @@ function rebuildCurves() {
     }
 
     redrawCurveEditor();
-    recomputeExport();
 
 }
 

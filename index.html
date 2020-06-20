@@ -22,7 +22,7 @@
                     <button id="rotation-toggle" onclick="toggleSection(SECTION.ROTATION);">Show</button>
                     <div class="flex-grower"></div>
                     <div><span class="hint-box"
-                            title="This section controls the rotation of the image to aligned axes. There are no inputs, but if there's something wrong you can open the expanded view to troubleshoot out what it is.">?</span>
+                            title="Rotation of the image to aligned axes. There are no inputs, but if there's something wrong you can open the expanded view to troubleshoot out what it is.">?</span>
                     </div>
                 </div>
                 <div id="rotation-div" class="section-contents-hidden"></div>
@@ -34,7 +34,7 @@
                     <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button>
                     <div class="flex-grower"></div>
                     <div><span class="hint-box"
-                            title="This section controls the conversion of the image to black and white. The slider controls the color value cutoff for black versus white. Input '-1' to reset to default. If your curve is very fragmented (and not due to grid lines), increase the cutoff.">?</span>
+                            title="Conversion of the image to black and white. The slider controls the color value cutoff for black versus white. Input '-1' to reset to default. If your curve is very fragmented (and not due to grid lines), increase the cutoff.">?</span>
                     </div>
                 </div>
                 <table>
@@ -60,7 +60,7 @@
                     <button id="degrid-toggle" onclick="toggleSection(SECTION.DEGRID);">Show</button>
                     <div class="flex-grower"></div>
                     <div><span class="hint-box"
-                            title="This section controls the identification and removal of grid lines. Mouseover the parameter labels for details. The margins for individual grid lines can be modified in the expanded view. Input '-1' in any field to reset to default. Modify the first parameter if a grid line isn't being picked up, and modify the others if not the whole grid line is being clipped out.">?</span>
+                            title="Identification and removal of grid lines. Mouseover the parameter labels for details. The margins for individual grid lines can be modified in the expanded view. Input '-1' in any field to reset to default. Modify the first parameter if a grid line isn't being picked up, and modify the others if not the whole grid line is being clipped out.">?</span>
                     </div>
                 </div>
                 <table>
@@ -113,7 +113,7 @@
                 <table>
                     <tr0>
                         <td><span
-                                title="If x is the independent variable, the datasets will be y=f(x). Parametric curves 'looping back' along both x and y axes are not supported.">Independent
+                                title="If x is the independent variable, the data sets will be y=f(x). Parametric curves 'looping back' along both x and y axes are not supported.">Independent
                                 variable:</span></td>
                         <td><select id="uv-select" onchange="uvSelectChanged()">
                                 <option value="true">x</option>
@@ -164,7 +164,7 @@
                 <h3 class="section-header-text">Export&nbsp;</h3>
                 <div class="flex-grower"></div>
                 <div><span class="hint-box"
-                        title="Rename, filter and download your datasets here. Double-click a name to rename it and see the curve it refers to. There are three data export modes:&#013;&#010;&#013;&#010;All data: one data point for every pixel along the independent variable axis.&#013;&#010;Fixed intervals: data points at fixed intervals along the independent variable axis.&#013;&#010;Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change slope a lot.">?</span>
+                        title="Rename, filter and download your data sets here. Double-click a name to rename it and see the curve it refers to. There are three data export modes:&#013;&#010;&#013;&#010;All data: one data point for every pixel along the independent variable axis.&#013;&#010;Fixed intervals: data points at fixed intervals along the independent variable axis.&#013;&#010;Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change slope a lot.">?</span>
                 </div>
             </div>
             <table id="downloads-table"></table>

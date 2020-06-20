@@ -69,6 +69,7 @@ function redrawCurveEditor() {
         curvePermaContext.lineTo(connections[i].x2, connections[i].y2);
     }
     curvePermaContext.stroke();
+    recomputeExport();
 }
 
 function curveMouseDown(e) {
