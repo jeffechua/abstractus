@@ -11,7 +11,9 @@
         <input type="file" id="source-selector" accept=".png" onchange="onSourceChanged();">
         <button onclick="onSourceChanged();">Resubmit</button>
         <div class="flex-grower"></div>
-        <a href="https://github.com/jeffechua/abstractus">Source download (no compilation needed!)</a>
+        <a href="https://github.com/jeffechua/abstractus/blob/master/README.md">Instructions</a>
+        <div class="table-hspace"></div>
+        <a href="https://github.com/jeffechua/abstractus">Download/Source</a>
     </div>
     <hr class="toprule" />
     <div class="row-flexbox">
@@ -34,7 +36,7 @@
                     <button id="bwify-toggle" onclick="toggleSection(SECTION.BWIFY);">Show</button>
                     <div class="flex-grower"></div>
                     <div><span class="hint-box"
-                            title="Conversion of the image to black and white. The slider controls the color value cutoff for black versus white. Input '-1' to reset to default. If your curve is very fragmented (and not due to grid lines), increase the cutoff.">?</span>
+                            title="Conversion of the image to black and white. The slider controls the color value cutoff between black and white. Input '-1' to reset to default. If your curve is very fragmented (and not due to grid lines), increase the cutoff.">?</span>
                     </div>
                 </div>
                 <table>
@@ -66,7 +68,7 @@
                 <table>
                     <tr>
                         <td><a
-                                title="When the frequency (in % of max registered frequency) exceeds this value, a grid line is registered.">Detection
+                                title="When the cumulative intensity of the row/column (in % of max registered cumulative intensity) exceeds this value, a grid line is registered.">Detection
                                 threshold</a> (%):</td>
                         <td><input type="number" min="0" max="100" id="degrid-detection-number" class="input-number"
                                 onchange="setDegridDetectionThreshold(this.value);"></td>
@@ -78,7 +80,7 @@
                     </tr>
                     <tr>
                         <td><a
-                                title="After a grid line is registered, its registered span is extended in both directions until the rate of decrease of the frequency graph (in % of max registered frequency / pixel) goes below this threshold.">Slope
+                                title="After a grid line is registered, its registered span is extended in both directions until the rate of decrease of the cumulative intensity graph (in % of max registered cumulative intensity / pixel) goes below this threshold.">Slope
                                 threshold</a> (%/px):</td>
                         <td><input type="number" min="0" max="100" id="degrid-slope-number" class="input-number"
                                 onchange="setDegridSlopeThreshold(this.value);"></td>
@@ -164,7 +166,7 @@
                 <h3 class="section-header-text">Export&nbsp;</h3>
                 <div class="flex-grower"></div>
                 <div><span class="hint-box"
-                        title="Rename, filter and download your data sets here. Double-click a name to rename it and see the curve it refers to. There are three data export modes:&#013;&#010;&#013;&#010;All data: one data point for every pixel along the independent variable axis.&#013;&#010;Fixed intervals: data points at fixed intervals along the independent variable axis.&#013;&#010;Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change slope a lot.">?</span>
+                        title="Rename, filter and download your data sets here. Double-click a name to rename it and highlight the curve it refers to. There are three data export modes:&#013;&#010;&#013;&#010;All data: one data point for every pixel along the independent variable axis.&#013;&#010;Fixed intervals: data points at fixed intervals along the independent variable axis.&#013;&#010;Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change slope a lot.">?</span>
                 </div>
             </div>
             <table id="downloads-table"></table>

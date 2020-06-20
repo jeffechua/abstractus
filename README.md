@@ -3,7 +3,7 @@ A client-side utility web application that extracts data sets from an image of a
 
 ## How to use
 
-The entirety of the program's functionality is accessed via `index.html`. The data extraction is divided into sections:
+The entirety of the program's functionality is accessed via the one and only web page, `index.html`. The data extraction is divided into sections:
 
 1. Rotation correction (typically nothing happens here)
 2. Bwify (black-and-whitify; you're free to submit a pull request if you have a better name)
@@ -35,7 +35,7 @@ The expanded view shows the detected grid lines and options for controlling thei
 
 ### Finalize
 
-There are several global options:
+There are several global inputs:
 
 1. Independent variable: if x is the independent variable, the data sets will be y=f(x). Parametric curves 'looping back' along both x and y axes are not supported. This also impacts some of the export modes in the Export section.
 
@@ -43,11 +43,13 @@ There are several global options:
 
 3. Curve editing mode: toggles between erasure mode (the default) and curve editing mode.
 
-    - Erasure mode: click and drag to erase rectangles; shift-click and drag to restore; alt-click to erase one whole contiguous fragment. Use this to delete noise/artifacts from the data.
+    - Erasure mode: click and drag on the chart area to erase rectangles; shift-click and drag to restore; alt-click to erase one whole contiguous fragment. Use this to delete noise/artifacts from the data.
 
     - Curve editing mode: drag from node to node to create a connection; drag through blank space to cut connections; double-click on nodes to cap/uncap. Use this to fix things if the fragments aren't being correctly connected automatically.
 
 3. Reset erasures/axes/curves: respectively, deletions made in erasure mode, the axis scales, and curve editing mode actions.
+
+4. Axis scale inputs: the text boxes at the ends of the axes in the chart display allow inputting of the bounds of the chart area. This only affects the scale of the export data.
 
 It may be helpful to keep an eye on the Export preview while working to catch any ticks or irregularities.
 
@@ -68,6 +70,10 @@ There are three data export modes:
 3. Fixed distances: data points are at fixed 2D distances from each other. More suitable than 'fixed interval' for curves that change gradient a lot.
 
 The options at the top of the table next to the "Download All" link are global settings; setting mode or interval on the individual data sets creates an override. To return a data set to default settings, use the "Reset to default" option in the mode selection for mode, and input `-1` into the numerical input for interval.  
+
+## Downloading for offline use
+
+Literally just download the repository and open `index.html` to use. The application is wholly client-side JavaScript.
 
 ## Application architecture
 

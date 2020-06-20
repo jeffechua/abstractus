@@ -274,10 +274,10 @@ function redrawExport() {
     exportContext.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
 
     exportContext.strokeStyle = "black";
-    const xPrecision = Math.max(0, 2 - Math.round(Math.log10(exportParams.exportWidth)));
-    const yPrecision = Math.max(0, 2 - Math.round(Math.log10(exportParams.exportHeight)));
+    const xPrecision = Math.max(0, 2 - Math.round(Math.log10(Math.abs(exportParams.exportWidth))));
+    const yPrecision = Math.max(0, 2 - Math.round(Math.log10(Math.abs(exportParams.exportHeight))));
     const xFormat = exportParams.logScale[0] ? (x) => x.toExponential(1) : (x) => x.toFixed(xPrecision);
-    const yFormat = exportParams.logScale[1] ? (y) => y.toExponential(1) : (y) => x.toFixed(xPrecision);
+    const yFormat = exportParams.logScale[1] ? (y) => y.toExponential(1) : (y) => y.toFixed(yPrecision);
 
     for (let i = 1; i < xGridLines.length - 1; i++) {
         if (!xGridLines[i].active) continue;
